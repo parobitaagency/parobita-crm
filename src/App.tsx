@@ -1,0 +1,67 @@
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { useSession } from './lib/session'
+import { supabase } from './lib/supabase'
+import Login from './pages/Login'
+import Today from './pages/Today'
+import Leads from './pages/Leads'
+import Meetings from './pages/Meetings'
+import Deals from './pages/Deals'
+
+const NAV = [
+  { to: '/', icon: '☀︎', label: 'Bugün' },
+  { to: '/leadler', icon: '☎︎', label: 'Lead’ler' },
+  { to: '/toplantilar', icon: '◷', label: 'Toplantılar' },
+  { to: '/satislar', icon: '◆', label: 'Satışlar' },
+]
+
+export default function App() {
+  const { session, me, badges, loading } = useSession()
+  if (loading) return null
+  if (!session) return <Login />
+  if (!me)
+    return (
+      <div className="login"><div className="box">
+        <h1>Hesap hazır değil</h1>
+        <p className="muted">Bu e-posta için profil tanımlanmamış. Burak'a haber ver.</p>
+        <button className="btn" onClick={() => supabase.auth.signOut()}>Çıkış yap</button>
+      </div></div>
+    )
+
+  const warn = badges.missing + badges.awaiting
+
+  return (
+    <div className="app">
+      <aside className="side">
+        <div className="ws"><span className="ws-icon">P</span>Parobita</div>
+        {NAV.map((n) => (
+          <NavLink key={n.to} to={n.to} end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+            <span style={{ width: 18, textAlign: 'center' }}>{n.icon}</span>
+            {n.label}
+            {n.to === '/toplantilar' && warn > 0 && <span className="count warn">{warn}</span>}
+          </NavLink>
+        ))}
+        <div className="foot">
+          {me.full_name} · <a href="#" onClick={(e) => { e.preventDefault(); supabase.auth.signOut() }}>Çıkış</a>
+        </div>
+      </aside>
+      <main className="main">
+        <Routes>
+          <Route path="/" element={<Today />} />
+          <Route path="/leadler" element={<Leads />} />
+          <Route path="/toplantilar" element={<Meetings />} />
+          <Route path="/satislar" element={<Deals />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </main>
+      <nav className="tabbar">
+        {NAV.map((n) => (
+          <NavLink key={n.to} to={n.to} end className={({ isActive }) => (isActive ? 'active' : '')}>
+            <span className="i">{n.icon}</span>
+            {n.label}
+            {n.to === '/toplantilar' && warn > 0 && <span className="badge">{warn}</span>}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  )
+}
