@@ -5,6 +5,7 @@ import { useSession } from '../lib/session'
 import { MeetingRow } from './Meetings'
 import MeetingPanel from '../components/MeetingPanel'
 import LeadPanel from '../components/LeadPanel'
+import Rivalry from '../components/Rivalry'
 
 const SEL = '*, leads(business_name, phone, address, district, maps_url)'
 
@@ -61,6 +62,8 @@ export default function Today() {
         <div className="stat"><div className="k">Bugünkü toplantılar</div><div className="v">{today.length}</div></div>
         <div className="stat"><div className="k">Aranacak lead</div><div className="v">{stats.left}</div></div>
       </div>
+
+      <Rivalry />
 
       <h2 className="section">Bugünkü toplantılar <span className="n">{today.length}</span></h2>
       {today.length ? <div className="list">{today.map((m) => <MeetingRow key={m.id} m={m} onClick={() => setOpenM(m)} />)}</div>

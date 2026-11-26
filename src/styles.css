@@ -274,3 +274,14 @@ textarea.input { height: auto; min-height: 72px; padding: 8px 10px; resize: vert
   .board { margin: 0 -16px; padding: 0 16px 12px; }
   .col { width: 78vw; }
 }
+
+/* Rekabet */
+.rivals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rival { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.rival-head { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; }
+.rival-level { margin: 4px 0 10px; font-size: 13px; color: var(--text-2); }
+.rival-level.bad { color: var(--danger); font-weight: 600; }
+.rival-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.rival-stats div { display: flex; flex-direction: column; }
+.rival-stats b { font-size: 20px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.rival-stats span { font-size: 11px; color: var(--text-3); }
