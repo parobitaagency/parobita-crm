@@ -86,7 +86,7 @@ begin
 
   -- 6) Günlük motivasyon, 10:00
   if extract(hour from loc) >= 10 then
-    select text into q from quotes where active order by random() limit 1;
+    q := quote_line();
     for p in select id from profiles loop
       perform notify(array[p.id], 'motivasyon', 'Parobita', q, '/', 'motiv-' || today, null);
     end loop;
