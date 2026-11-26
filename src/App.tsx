@@ -1,6 +1,8 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
+import { useEffect, useState } from 'react'
+import { hardReload } from './components/ErrorBoundary'
 import Login from './pages/Login'
 import Today from './pages/Today'
 import Leads from './pages/Leads'
@@ -16,7 +18,7 @@ const NAV = [
 
 export default function App() {
   const { session, me, badges, loading } = useSession()
-  if (loading) return null
+  if (loading) return <Loading />
   if (!session) return <Login />
   if (!me)
     return (
@@ -63,5 +65,21 @@ export default function App() {
         ))}
       </nav>
     </div>
+  )
+}
+
+function Loading() {
+  const [slow, setSlow] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setSlow(true), 6000); return () => clearTimeout(t) }, [])
+  return (
+    <div className="login"><div className="box" style={{ textAlign: 'center' }}>
+      <p className="muted">Yükleniyor…</p>
+      {slow && (
+        <>
+          <p className="faint" style={{ fontSize: 13 }}>Uzun sürdü. İnternet bağlantını kontrol et ya da önbelleği temizle.</p>
+          <button className="btn" onClick={hardReload}>Önbelleği temizle ve yenile</button>
+        </>
+      )}
+    </div></div>
   )
 }

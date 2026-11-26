@@ -25,7 +25,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
       if (!data.session) setLoading(false)
-    })
+    }).catch(() => setLoading(false))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
     return () => data.subscription.unsubscribe()
   }, [])
@@ -41,12 +41,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session) { setMe(null); return }
     ;(async () => {
+      try {
       const { data } = await supabase.from('profiles').select('id, full_name, role').order('full_name')
       const list = (data ?? []) as Profile[]
       setPeople(list)
       setMe(list.find((p) => p.id === session.user.id) ?? null)
       await refreshBadges()
-      setLoading(false)
+      } finally { setLoading(false) }
     })()
   }, [session, refreshBadges])
 
