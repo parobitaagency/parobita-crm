@@ -3,7 +3,7 @@ import Panel, { Prop, fromLocalInput } from './Panel'
 import { STATUS, supabase, telHref, type Lead, type LeadStatus } from '../lib/supabase'
 import { useSession } from '../lib/session'
 
-type Outcome = 'acmadi' | 'sonra_ara' | 'red' | 'toplanti'
+export type Outcome = 'acmadi' | 'sonra_ara' | 'red' | 'toplanti'
 const OUTCOMES: { k: Outcome; e: string; l: string }[] = [
   { k: 'toplanti', e: '✅', l: 'Toplantı' },
   { k: 'red', e: '❌', l: 'Red' },
@@ -11,10 +11,10 @@ const OUTCOMES: { k: Outcome; e: string; l: string }[] = [
   { k: 'sonra_ara', e: '⚠️', l: 'Sonra ara' },
 ]
 
-export default function LeadPanel({ lead, onClose, onSaved }: { lead: Lead; onClose: () => void; onSaved: (l: Lead) => void }) {
+export default function LeadPanel({ lead, onClose, onSaved, initialOutcome }: { lead: Lead; onClose: () => void; onSaved: (l: Lead) => void; initialOutcome?: Outcome }) {
   const { me, people, refreshBadges } = useSession()
   const [l, setL] = useState<Lead>(lead)
-  const [outcome, setOutcome] = useState<Outcome | null>(null)
+  const [outcome, setOutcome] = useState<Outcome | null>(initialOutcome ?? null)
   const [when, setWhen] = useState('')
   const [contact, setContact] = useState('')
   const [note, setNote] = useState('')

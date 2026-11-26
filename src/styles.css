@@ -114,6 +114,23 @@ select.filter:hover { background: var(--bg-hover); }
 .more:hover { background: var(--bg-hover); }
 .empty { padding: 28px 8px; color: var(--text-3); }
 
+/* Kaydırılabilir tablo */
+.page.wide { max-width: none; padding-left: 96px; padding-right: 96px; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -8px; }
+.table.sheet { width: max-content; min-width: 100%; }
+.table.sheet th, .table.sheet td { border-right: 1px solid var(--line); }
+.table.sheet th:last-child, .table.sheet td:last-child { border-right: 0; }
+.table.sheet td { padding: 6px 8px; }
+.table.sheet tr:hover td { background: var(--bg-hover); }
+.table .sticky { position: sticky; left: 0; background: var(--bg); z-index: 1; min-width: 200px; max-width: 260px; }
+.table tr:hover td.sticky { background: color-mix(in srgb, var(--bg) 94%, var(--text)); }
+.table td.clip { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.call-link { text-decoration: none; color: inherit; }
+.call-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+td.name .call-link { font-weight: 500; }
+.select-tag { position: relative; cursor: pointer; }
+.select-tag select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; font-size: 16px; }
+
 /* Etiket */
 .tag {
   display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; height: 20px;
@@ -235,7 +252,9 @@ textarea.input { height: auto; min-height: 72px; padding: 8px 10px; resize: vert
 
 @media (max-width: 760px) {
   .side { display: none; }
-  .page { padding: calc(20px + var(--safe-t)) 16px calc(96px + var(--safe-b)); }
+  .page, .page.wide { padding: calc(20px + var(--safe-t)) 16px calc(96px + var(--safe-b)); }
+  .table-wrap { margin: 0 -16px; padding: 0 16px; }
+  .table .sticky { min-width: 150px; max-width: 170px; white-space: normal; box-shadow: 1px 0 0 var(--line); }
   .page-icon { font-size: 36px; }
   h1.title { font-size: 30px; }
   .tabbar {
