@@ -4,11 +4,11 @@ import { supabase } from '../lib/supabase'
 interface Row { id: string; full_name: string; week_calls: number; week_meetings: number; today_calls: number; escapes: number; finished: number; ezik: number }
 
 export const LEVELS = [
-  { e: '👑', t: 'Makine' },
+  { e: '💰', t: 'Milyarder' },
   { e: '😐', t: 'Bahaneci' },
   { e: '🐢', t: 'Kaplumbağa' },
-  { e: '🛋️', t: 'Koltuk Patatesi' },
-  { e: '🤡', t: 'Ezik' },
+  { e: '🛋️', t: 'Koltuk Pezevengi' },
+  { e: '🤡', t: 'Fakir' },
 ]
 export const level = (n: number) => LEVELS[Math.min(n, LEVELS.length - 1)]
 
