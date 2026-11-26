@@ -44,6 +44,8 @@ export default function Today() {
         <div className="subtitle">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
       </div>
 
+      <a className="btn primary big" style={{ width: '100%', marginBottom: 12 }} href="shortcuts://run-shortcut?name=Parobita%20Ara">▶ Arama seansı başlat</a>
+
       {(badges.missing > 0 || badges.awaiting > 0) && (
         <Link to="/toplantilar" style={{ textDecoration: 'none' }}>
           <div className="callout"><span className="ic">⚠️</span><div>

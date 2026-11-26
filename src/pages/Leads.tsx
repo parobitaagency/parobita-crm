@@ -73,6 +73,7 @@ export default function Leads() {
         <div className="page-icon">☎︎</div>
         <h1 className="title">Lead’ler</h1>
         <div className="subtitle">{total.toLocaleString('tr-TR')} kayıt</div>
+        <a className="btn primary" style={{ marginTop: 12 }} href="shortcuts://run-shortcut?name=Parobita%20Ara">▶ Arama seansı başlat</a>
       </div>
 
       <div className="toolbar">
