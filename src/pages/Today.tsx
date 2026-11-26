@@ -6,6 +6,7 @@ import { MeetingRow } from './Meetings'
 import MeetingPanel from '../components/MeetingPanel'
 import LeadPanel from '../components/LeadPanel'
 import Rivalry from '../components/Rivalry'
+import PushToggle from '../components/PushToggle'
 
 const SEL = '*, leads(business_name, phone, address, district, maps_url)'
 
@@ -45,7 +46,9 @@ export default function Today() {
         <div className="subtitle">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
       </div>
 
-      <a className="btn primary big" style={{ width: '100%', marginBottom: 12 }} href="shortcuts://run-shortcut?name=Parobita%20Ara">▶ Arama seansı başlat</a>
+      <PushToggle />
+
+      <a className="btn primary big" style={{ width: '100%', marginBottom: 12, marginTop: 8 }} href="shortcuts://run-shortcut?name=Parobita%20Ara">▶ Arama seansı başlat</a>
 
       {(badges.missing > 0 || badges.awaiting > 0) && (
         <Link to="/toplantilar" style={{ textDecoration: 'none' }}>
