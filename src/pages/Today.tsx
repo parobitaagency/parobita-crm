@@ -74,6 +74,19 @@ export default function Today() {
         ))}</div>
       ) : <div className="empty">Bugün tekrar aranacak kimse yok.</div>}
 
+      <div className="divider" style={{ marginTop: 40 }} />
+      <div className="faint" style={{ fontSize: 13, display: 'flex', gap: 16 }}>
+        <a href="#" onClick={async (e) => {
+          e.preventDefault()
+          const pw = prompt('Yeni şifre (en az 8 karakter):')
+          if (!pw) return
+          if (pw.length < 8) return alert('Şifre en az 8 karakter olmalı.')
+          const { error } = await supabase.auth.updateUser({ password: pw })
+          alert(error ? 'Olmadı: ' + error.message : 'Şifre değişti.')
+        }}>Şifreyi değiştir</a>
+        <a href="#" onClick={(e) => { e.preventDefault(); supabase.auth.signOut() }}>Çıkış yap</a>
+      </div>
+
       {openM && <MeetingPanel meeting={openM} onClose={() => setOpenM(null)} onSaved={load} />}
       {openL && <LeadPanel lead={openL} onClose={() => setOpenL(null)} onSaved={() => load()} />}
     </div>
