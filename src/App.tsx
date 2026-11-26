@@ -17,7 +17,7 @@ const NAV = [
 ]
 
 export default function App() {
-  const { session, me, badges, loading } = useSession()
+  const { session, me, badges, marathon, loading } = useSession()
   if (loading) return <Loading />
   if (!session) return <Login />
   if (!me)
@@ -30,6 +30,18 @@ export default function App() {
     )
 
   const warn = badges.missing + badges.awaiting
+
+  if (marathon)
+    return (
+      <div className="login"><div className="box" style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 48 }}>🏃</div>
+        <h1>Maraton devam ediyor</h1>
+        <div style={{ fontSize: 44, fontWeight: 700, fontVariantNumeric: 'tabular-nums', margin: '8px 0' }}>{marathon.done}/{marathon.target}</div>
+        <div className="progress" style={{ marginBottom: 20 }}><div style={{ width: `${(marathon.done / marathon.target) * 100}%` }} /></div>
+        <p className="muted">{marathon.target - marathon.done} arama kaldı. Bitmeden buradan çıkış yok.</p>
+        <a className="btn primary big" style={{ width: '100%' }} href="shortcuts://run-shortcut?name=Parobita%20Ara">▶ Devam et</a>
+      </div></div>
+    )
 
   return (
     <div className="app">
