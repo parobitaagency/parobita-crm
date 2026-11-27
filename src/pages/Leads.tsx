@@ -11,6 +11,10 @@ const VIEWS: { k: View; l: string }[] = [
   { k: 'tumu', l: 'Tümü' },
 ]
 const PAGE = 100
+const CHIPS: LeadStatus[] = ['yeni', 'acmadi', 'sonra_ara', 'red', 'toplanti', 'musteri']
+type DateF = '' | 'bugun' | 'hafta' | 'ay'
+type Sort = 'varsayilan' | 'guncel' | 'puan' | 'yorum' | 'isim'
+const store = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem('pb-lf-' + k); return v ? JSON.parse(v) as T : d } catch { return d } }
 const SELECTABLE: LeadStatus[] = ['yeni', 'toplanti', 'red', 'acmadi', 'sonra_ara']
 
 const shortDate = (iso: string | null) =>
@@ -27,29 +31,75 @@ export default function Leads() {
   const [limit, setLimit] = useState(PAGE)
   const [open, setOpen] = useState<{ lead: Lead; outcome?: Outcome } | null>(null)
   const [niches, setNiches] = useState<string[]>([])
+  const [statuses, setStatuses] = useState<LeadStatus[]>(() => store('st', []))
+  const [district, setDistrict] = useState<string>(() => store('dist', ''))
+  const [dateF, setDateF] = useState<DateF>(() => store('date', ''))
+  const [sort, setSort] = useState<Sort>(() => store('sort', 'varsayilan'))
+  const [counts, setCounts] = useState<Partial<Record<LeadStatus, number>>>({})
+  const [districts, setDistricts] = useState<string[]>([])
+  const [showF, setShowF] = useState(false)
+  useEffect(() => {
+    localStorage.setItem('pb-lf-st', JSON.stringify(statuses)); localStorage.setItem('pb-lf-dist', JSON.stringify(district))
+    localStorage.setItem('pb-lf-date', JSON.stringify(dateF)); localStorage.setItem('pb-lf-sort', JSON.stringify(sort))
+  }, [statuses, district, dateF, sort])
+  const activeF = statuses.length + (district ? 1 : 0) + (dateF ? 1 : 0) + (sort !== 'varsayilan' ? 1 : 0)
+  const clearF = () => { setStatuses([]); setDistrict(''); setDateF(''); setSort('varsayilan') }
+  const toggle = (st: LeadStatus) => setStatuses((xs) => (xs.includes(st) ? xs.filter((x) => x !== st) : [...xs, st]))
 
   useEffect(() => {
-    supabase.from('leads').select('niche').not('niche', 'is', null).then(({ data }) =>
-      setNiches([...new Set((data ?? []).map((d) => d.niche as string))].sort()))
+    supabase.from('leads').select('niche, district').then(({ data }) => {
+      setNiches([...new Set((data ?? []).map((d) => d.niche as string).filter(Boolean))].sort())
+      const freq = new Map<string, number>()
+      ;(data ?? []).forEach((d) => { const k = ((d.district as string) || '').split(/[\/(,]/)[0].trim(); if (k) freq.set(k, (freq.get(k) ?? 0) + 1) })
+      setDistricts([...freq].filter(([, n]) => n >= 2).sort((a, b) => a[0].localeCompare(b[0], 'tr')).map(([k]) => k))
+    })
   }, [])
+
+  // Durum çiplerindeki sayılar
+  useEffect(() => {
+    let alive = true
+    Promise.all(CHIPS.map(async (st) => {
+      let qq = supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', st)
+      if (who !== 'all') qq = qq.eq('assigned_to', who)
+      if (niche) qq = qq.eq('niche', niche)
+      if (district) qq = qq.ilike('district', `%${district}%`)
+      const { count } = await qq
+      return [st, count ?? 0] as const
+    })).then((xs) => alive && setCounts(Object.fromEntries(xs)))
+    return () => { alive = false }
+  }, [who, niche, district, rows])
 
   const load = useCallback(async () => {
     let query = supabase.from('leads').select('*', { count: 'exact' })
     if (who !== 'all') query = query.eq('assigned_to', who)
-    if (view === 'aranacak') query = query.in('status', ['yeni', 'acmadi']).order('status', { ascending: false }).order('list_date').order('sort_order')
-    if (view === 'tekrar') query = query.eq('status', 'sonra_ara').order('call_back_at', { nullsFirst: true })
-    if (view === 'toplanti') query = query.in('status', ['toplanti', 'musteri']).order('updated_at', { ascending: false })
-    if (view === 'tumu') query = query.order('updated_at', { ascending: false })
+    if (statuses.length) query = query.in('status', statuses)
+    else if (view === 'aranacak') query = query.in('status', ['yeni', 'acmadi'])
+    else if (view === 'tekrar') query = query.eq('status', 'sonra_ara')
+    else if (view === 'toplanti') query = query.in('status', ['toplanti', 'musteri'])
     if (niche) query = query.eq('niche', niche)
+    if (district) query = query.ilike('district', `%${district}%`)
+    if (dateF) {
+      const d = new Date(); d.setHours(0, 0, 0, 0)
+      if (dateF === 'hafta') d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+      if (dateF === 'ay') d.setDate(1)
+      query = query.gte('list_date', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+    }
+    if (sort === 'guncel') query = query.order('updated_at', { ascending: false })
+    else if (sort === 'puan') query = query.order('rating', { ascending: false, nullsFirst: false })
+    else if (sort === 'yorum') query = query.order('review_count', { ascending: false, nullsFirst: false })
+    else if (sort === 'isim') query = query.order('business_name')
+    else if (!statuses.length && view === 'aranacak') query = query.order('status', { ascending: false }).order('list_date').order('sort_order')
+    else if (!statuses.length && view === 'tekrar') query = query.order('call_back_at', { nullsFirst: true })
+    else query = query.order('updated_at', { ascending: false })
     const s = q.trim().replace(/[%,()]/g, '')
     if (s) query = query.or(`business_name.ilike.%${s}%,phone.ilike.%${s}%,district.ilike.%${s}%,address.ilike.%${s}%`)
     const { data, count } = await query.range(0, limit - 1)
     setRows((data ?? []) as Lead[])
     setTotal(count ?? 0)
-  }, [who, view, niche, q, limit])
+  }, [who, view, niche, q, limit, statuses, district, dateF, sort])
 
   useEffect(() => { const t = setTimeout(load, q ? 250 : 0); return () => clearTimeout(t) }, [load, q])
-  useEffect(() => setLimit(PAGE), [who, view, niche, q])
+  useEffect(() => setLimit(PAGE), [who, view, niche, q, statuses, district, dateF, sort])
 
   const onSaved = (l: Lead) => setRows((rs) => rs.map((r) => (r.id === l.id ? l : r)))
 
@@ -77,7 +127,11 @@ export default function Leads() {
       </div>
 
       <div className="toolbar">
-        {VIEWS.map((v) => <button key={v.k} className={'tab' + (view === v.k ? ' on' : '')} onClick={() => setView(v.k)}>{v.l}</button>)}
+        {VIEWS.map((v) => <button key={v.k} className={'tab' + (view === v.k && !statuses.length ? ' on' : '')} onClick={() => { setView(v.k); setStatuses([]) }}>{v.l}</button>)}
+        <button className={'tab filter-btn' + (showF || activeF ? ' on' : '')} onClick={() => setShowF((x) => !x)}>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+          Filtre{activeF ? ` · ${activeF}` : ''}
+        </button>
         <span className="spacer" />
         {me?.role === 'owner' && (
           <select className="filter" value={who} onChange={(e) => setWho(e.target.value)}>
@@ -91,6 +145,40 @@ export default function Leads() {
         </select>
         <input className="search" placeholder="Ara…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
+
+      {(showF || statuses.length > 0) && (
+        <div className="filters">
+          <div className="chips">
+            {CHIPS.map((st) => (
+              <button key={st} className={'chip status-chip ' + STATUS[st].tone + (statuses.includes(st) ? ' on' : '')} onClick={() => toggle(st)}>
+                {STATUS[st].icon && <span>{STATUS[st].icon}</span>}{STATUS[st].label}<span className="cnt">{counts[st] ?? '·'}</span>
+              </button>
+            ))}
+          </div>
+          {showF && (
+            <div className="filter-row">
+              <select className="filter" value={district} onChange={(e) => setDistrict(e.target.value)}>
+                <option value="">Tüm semtler</option>
+                {districts.map((d) => <option key={d}>{d}</option>)}
+              </select>
+              <select className="filter" value={dateF} onChange={(e) => setDateF(e.target.value as DateF)}>
+                <option value="">Tüm liste tarihleri</option>
+                <option value="bugun">Bugünün listesi</option>
+                <option value="hafta">Bu haftanın listeleri</option>
+                <option value="ay">Bu ayın listeleri</option>
+              </select>
+              <select className="filter" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+                <option value="varsayilan">Sıralama: arama sırası</option>
+                <option value="guncel">Son güncellenen</option>
+                <option value="puan">En yüksek puan</option>
+                <option value="yorum">En çok yorum</option>
+                <option value="isim">İsme göre (A–Z)</option>
+              </select>
+              {activeF > 0 && <button className="btn ghost" onClick={clearF}>Temizle</button>}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="table-wrap">
         <table className="table sheet">
