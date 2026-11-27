@@ -1,8 +1,10 @@
 // Uygulama her öne geldiğinde yeni sürümü kontrol et; yeni sürüm devraldığında sayfayı yenile.
 if ('serviceWorker' in navigator) {
   let reloaded = false
+  // İlk kurulumda (önceden çalışan sürüm yokken) yenileme yapma; sadece gerçek güncellemede yenile
+  const hadController = !!navigator.serviceWorker.controller
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (reloaded) return
+    if (reloaded || !hadController) return
     reloaded = true
     location.reload()
   })
