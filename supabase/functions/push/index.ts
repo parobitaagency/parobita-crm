@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           JSON.stringify({ title: n.title, body: n.body ?? '', url: n.url ?? '/', tag: n.kind + (n.ref_id ?? '') }),
-          { TTL: 3600 },
+          { TTL: 86400 },
         )
         sent++
       } catch (e) {
