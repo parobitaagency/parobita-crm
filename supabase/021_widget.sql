@@ -20,6 +20,15 @@ begin
         order by m.scheduled_at limit 6) x),
     'events', (select coalesce(json_agg(x), '[]') from (
         select title name, starts_at at from events where starts_at >= now() - interval '1 hour' and starts_at < now() + interval '7 days' order by starts_at limit 4) x),
+    'cal', (select coalesce(json_agg(x order by x.at), '[]') from (
+        select 'toplanti' kind, 'Toplantı · ' || l.business_name name, m.scheduled_at at, m.scheduled_at + make_interval(mins => m.duration_min) until, coalesce(l.district,'') place
+          from meetings m join leads l on l.id=m.lead_id
+          where m.status in ('planli','yapildi') and m.scheduled_at >= date_trunc('day', loc) at time zone 'Europe/Istanbul' and m.scheduled_at < now() + interval '14 days'
+            and (m.created_by = uid or uid = any(m.attendees))
+        union all
+        select 'etkinlik', e.title, e.starts_at, e.ends_at, coalesce(e.location,'') from events e
+          where e.starts_at >= date_trunc('day', loc) at time zone 'Europe/Istanbul' and e.starts_at < now() + interval '14 days'
+        limit 40) x),
     'rev_month', (select coalesce(sum(amount),0) from deals where stage='satis' and closed_at >= som),
     'rev_prev', (select coalesce(sum(amount),0) from deals where stage='satis' and closed_at >= psom and closed_at < som),
     'sales_month', (select count(*) from deals where stage='satis' and closed_at >= som),
