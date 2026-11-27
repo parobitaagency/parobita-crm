@@ -111,3 +111,14 @@ export const fmtTime = (iso: string | null) =>
   iso ? new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '—'
 
 export const telHref = (p: string | null) => (p ? 'tel:' + p.replace(/[^\d+]/g, '') : undefined)
+
+export interface CalEvent {
+  id: string
+  owner_id: string
+  created_by: string | null
+  title: string
+  starts_at: string
+  ends_at: string
+  notes: string | null
+  location: string | null
+}

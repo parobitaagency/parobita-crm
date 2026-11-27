@@ -18,6 +18,7 @@ export async function prefetchAll(meId: string) {
       supabase.from('rivalry').select('*'),
       supabase.from('meetings').select(MEET_SEL).neq('status', 'iptal')
         .gte('scheduled_at', calFrom()).lte('scheduled_at', calTo()).order('scheduled_at'),
+      supabase.from('events').select('*').gte('starts_at', calFrom()).lte('starts_at', calTo()).order('starts_at'),
       supabase.from('leads').select('niche').not('niche', 'is', null),
     ])
   } catch { /* önemli değil */ }

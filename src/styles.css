@@ -321,3 +321,42 @@ textarea.input { height: auto; min-height: 72px; padding: 8px 10px; resize: vert
 .cal-day i { width: 5px; height: 5px; border-radius: 50%; background: var(--danger); position: absolute; bottom: 3px; }
 .cal-daylist { display: flex; flex-direction: column; gap: 6px; }
 .cal-daylist .cal-ev { font-size: 14px; padding: 8px 10px; }
+
+/* Google Takvim tarzı saat ızgarası */
+.tg { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); }
+.tg-header { display: flex; border-bottom: 1px solid var(--line); }
+.tg-dh { flex: 1; text-align: center; padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tg-dh span { font-size: 11px; color: var(--text-3); letter-spacing: .04em; }
+.tg-dh b { font-size: 22px; font-weight: 500; width: 40px; height: 40px; line-height: 40px; border-radius: 50%; }
+.tg-dh.today span { color: var(--accent); }
+.tg-dh.today b { background: var(--accent); color: #fff; }
+.tg-body { display: flex; height: 62vh; overflow-y: auto; position: relative; }
+.tg-gutter { width: 52px; flex-shrink: 0; }
+.tg-header .tg-gutter { border-right: 0; }
+.tg-hour { height: 52px; font-size: 10.5px; color: var(--text-3); text-align: right; padding-right: 8px; transform: translateY(-7px); }
+.tg-cols { flex: 1; display: flex; }
+.mobile-only-flex { display: none; }
+.tg-col { flex: 1; position: relative; border-left: 1px solid var(--line); }
+.tg-slot { height: 52px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.tg-slot:hover { background: var(--bg-hover); }
+.tg-ev { position: absolute; border-radius: 6px; padding: 3px 6px; overflow: hidden; cursor: pointer; font-size: 12px; line-height: 1.25;
+  color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); border: 1px solid rgba(255,255,255,.6); }
+.tg-ev.blue { background: #2383e2; }
+.tg-ev.purple { background: #8e5bc4; }
+.tg-ev.gray { background: #787774; }
+.tg-ev.soft.blue { background: var(--t-blue-bg); color: var(--t-blue); border-left: 3px solid #2383e2; }
+.tg-ev.soft.purple { background: var(--t-purple-bg); color: var(--t-purple); border-left: 3px solid #8e5bc4; }
+.tg-ev.soft.gray { background: var(--t-gray-bg); color: var(--t-gray); border-left: 3px solid #787774; }
+.tg-ev.done { opacity: .5; }
+.tg-ev-n { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tg-ev-t { opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tg-now { position: absolute; left: -1px; right: 0; height: 2px; background: #ea4335; z-index: 2; pointer-events: none; }
+.tg-now::before { content: ''; position: absolute; left: -6px; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: #ea4335; }
+.title-input { width: 100%; border: 0; border-bottom: 1px solid var(--line-2); background: none; font-size: 24px; font-weight: 600; padding: 8px 0; margin: 4px 0 16px; outline: none; }
+.title-input:focus { border-color: var(--accent); }
+@media (max-width: 760px) {
+  .mobile-only-flex { display: flex; }
+  .tg-body { height: 64vh; }
+  .tg-gutter { width: 46px; }
+  .tg-ev { font-size: 13px; padding: 5px 8px; }
+}
