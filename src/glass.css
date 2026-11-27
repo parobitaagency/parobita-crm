@@ -359,3 +359,41 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ===== v3: esneyen hap, yönlü geçiş, kapanış animasyonları ===== */
+.tabbar .tab-pill, .side-pill { transition: scale .35s var(--spring), background-color .2s, box-shadow .3s; }
+@media (max-width: 760px) {
+  .tabbar .tab-pill { transition: scale .35s var(--spring), box-shadow .3s; transform-origin: center; }
+  .tabbar.pressing .tab-pill { scale: 1.1; box-shadow: var(--glass-hi), 0 6px 22px rgba(0,0,0,.16); }
+  .tabbar { transition: scale .4s var(--spring); }
+  .tabbar.pressing { scale: 1.015; }
+}
+.route.dir-r { animation-name: routeR; }
+.route.dir-l { animation-name: routeL; }
+@keyframes routeR { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes routeL { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.route { animation-duration: .5s; animation-timing-function: cubic-bezier(.22,1,.36,1); }
+
+.panel.out { animation: panelOut .26s cubic-bezier(.4,0,.6,1) forwards; }
+.scrim.out { animation: fadeOut .26s forwards; }
+@keyframes panelOut { to { transform: translateX(40px) scale(.98); opacity: 0; } }
+@keyframes fadeOut { to { opacity: 0; } }
+@media (max-width: 760px) {
+  .panel.out { animation: sheetOut .28s cubic-bezier(.4,0,.6,1) forwards; }
+  @keyframes sheetOut { to { transform: translateY(100%); } }
+}
+
+/* Liste satırları ve kartlar kademeli belirir */
+.list .item, .board .card, .hbar, .tg-ev { animation: rise .5s var(--ease) backwards; }
+.list .item:nth-child(2), .board .card:nth-child(3), .hbar:nth-child(2) { animation-delay: .03s; }
+.list .item:nth-child(3), .board .card:nth-child(4), .hbar:nth-child(3) { animation-delay: .06s; }
+.list .item:nth-child(4), .board .card:nth-child(5), .hbar:nth-child(4) { animation-delay: .09s; }
+.list .item:nth-child(n+5), .board .card:nth-child(n+6), .hbar:nth-child(n+5) { animation-delay: .12s; }
+
+/* Seçili sekme/çip yumuşak geçiş */
+.tab, .chip, select.filter { transition: background-color .3s var(--ease), color .2s, box-shadow .3s, transform .35s var(--spring); }
+
+/* Kart üstüne basılı tutunca hafif büyüyüp kalkar (iOS bağlam menüsü hissi) */
+@media (hover: none) {
+  .card:active, .item:active, .rival:active { transform: scale(.97); }
+}

@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import { useEffect, useRef, useState } from 'react'
 import { hardReload } from './components/ErrorBoundary'
 import { prefetchAll } from './lib/prefetch'
+import LiquidPill from './components/LiquidPill'
 import Login from './pages/Login'
 import Today from './pages/Today'
 import Leads from './pages/Leads'
@@ -61,6 +62,11 @@ function Shell({ warn, name }: { warn: number; name: string }) {
   const mainRef = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
   const idx = Math.max(0, NAV.findIndex((n) => (n.to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(n.to))))
+  const lastIdx = useRef(idx)
+  const dirRef = useRef('n')
+  if (idx !== lastIdx.current) { dirRef.current = idx > lastIdx.current ? 'r' : 'l'; lastIdx.current = idx }
+  const dir = dirRef.current
+  const [pressing, setPressing] = useState(false)
   useEffect(() => {
     const el = mainRef.current; if (!el) return
     el.scrollTop = 0; setScrolled(false)
@@ -73,7 +79,7 @@ function Shell({ warn, name }: { warn: number; name: string }) {
       <aside className="side">
         <div className="ws"><span className="ws-icon">P</span>Parobita</div>
         <div className="side-nav" style={{ ['--i' as string]: idx }}>
-          <span className="side-pill" />
+          <LiquidPill idx={idx} axis="y" className="side-pill" />
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
               {n.icon}
@@ -88,7 +94,7 @@ function Shell({ warn, name }: { warn: number; name: string }) {
       </aside>
       <div className="topbar" aria-hidden={!scrolled}><span>{NAV[idx]?.label}</span></div>
       <main className="main" ref={mainRef}>
-        <div className="route" key={loc.pathname}>
+        <div className={'route dir-' + dir} key={loc.pathname}>
           <Routes location={loc}>
             <Route path="/" element={<Today />} />
             <Route path="/leadler" element={<Leads />} />
@@ -99,8 +105,9 @@ function Shell({ warn, name }: { warn: number; name: string }) {
           </Routes>
         </div>
       </main>
-      <nav className="tabbar" style={{ ['--i' as string]: idx, ['--n' as string]: NAV.length }}>
-        <span className="tab-pill" />
+      <nav className={'tabbar' + (pressing ? ' pressing' : '')} style={{ ['--n' as string]: NAV.length }}
+        onPointerDown={() => setPressing(true)} onPointerUp={() => setPressing(false)} onPointerCancel={() => setPressing(false)} onPointerLeave={() => setPressing(false)}>
+        <LiquidPill idx={idx} axis="x" className="tab-pill" />
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end className={({ isActive }) => (isActive ? 'active' : '')}>
             {n.icon}
