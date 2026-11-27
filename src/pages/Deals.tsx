@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { LOST_REASONS, PACKAGES, STAGES, supabase, tl, type Deal, type Stage } from '../lib/supabase'
 import Panel, { Prop, fromLocalInput, toLocalInput } from '../components/Panel'
 import { useSession } from '../lib/session'
+import { Link } from 'react-router-dom'
 
 const TARGET = 1_000_000
 
@@ -102,13 +103,13 @@ export default function Deals() {
         <h1 className="title">Satışlar</h1>
       </div>
 
-      <div className="stats">
-        <div className="stat"><div className="k">Bu ay ciro</div><div className="v">{tl(monthRev)}</div></div>
+      <Link to="/analiz" className="stats stats-link">
+        <div className="stat"><div className="k">Bu ay ciro ›</div><div className="v">{tl(monthRev)}</div></div>
         <div className="stat"><div className="k">Bu ay satış</div><div className="v">{wonMonth.length}</div></div>
         <div className="stat"><div className="k">Kapanış oranı</div><div className="v">%{rate}</div></div>
         <div className="stat"><div className="k">1M hedefi</div><div className="v">%{Math.round((revenue / TARGET) * 100)}</div>
           <div className="progress"><div style={{ width: `${Math.min(100, (revenue / TARGET) * 100)}%` }} /></div></div>
-      </div>
+      </Link>
 
       <h2 className="section">Pano</h2>
       <div className="board">

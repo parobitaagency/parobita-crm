@@ -9,13 +9,15 @@ import Today from './pages/Today'
 import Leads from './pages/Leads'
 import Meetings from './pages/Meetings'
 import Deals from './pages/Deals'
+import Analytics from './pages/Analytics'
 
 const sv = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, viewBox: '0 0 24 24' }
 const NAV = [
   { to: '/', label: 'Bugün', icon: <svg {...sv}><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" /></svg> },
   { to: '/leadler', label: 'Lead’ler', icon: <svg {...sv}><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg> },
   { to: '/toplantilar', label: 'Toplantılar', icon: <svg {...sv}><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg> },
-  { to: '/satislar', label: 'Satışlar', icon: <svg {...sv}><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" /></svg> },
+  { to: '/satislar', label: 'Satışlar', icon: <svg {...sv}><path d="M3.5 12.5V5a1.5 1.5 0 0 1 1.5-1.5h7.5L21 12l-8.5 8.5z" /><circle cx="8" cy="8" r="1.3" /></svg> },
+  { to: '/analiz', label: 'Analiz', icon: <svg {...sv}><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" /></svg> },
 ]
 
 export default function App() {
@@ -72,6 +74,7 @@ export default function App() {
           <Route path="/leadler" element={<Leads />} />
           <Route path="/toplantilar" element={<Meetings />} />
           <Route path="/satislar" element={<Deals />} />
+          <Route path="/analiz" element={<Analytics />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
