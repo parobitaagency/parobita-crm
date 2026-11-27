@@ -397,3 +397,28 @@ body::after {
 @media (hover: none) {
   .card:active, .item:active, .rival:active { transform: scale(.97); }
 }
+
+/* ===== v4: dokunarak sürüklenen mercek hap, kaydırmalı sayfalar ===== */
+@media (max-width: 760px) {
+  .tabbar { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .tabbar.pressing { scale: 1.02; }
+  .tabbar .tab-pill { transition: background-color .25s, box-shadow .3s, backdrop-filter .3s; will-change: transform; }
+  .tabbar.pressing .tab-pill { scale: none; }
+  /* Mercek: sürüklerken hap büyür, daha saydam ve parlak olur */
+  .tabbar .tab-pill.lens {
+    background: rgba(255,255,255,.28);
+    -webkit-backdrop-filter: blur(4px) saturate(220%) brightness(1.08); backdrop-filter: blur(4px) saturate(220%) brightness(1.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(255,255,255,.4), inset 0 0 0 0.5px rgba(255,255,255,.8), 0 10px 30px rgba(0,0,0,.18);
+  }
+  .tabbar a { pointer-events: auto; }
+  .tabbar a svg { transition: transform .4s var(--spring); }
+  .tabbar.pressing a.active svg { transform: scale(1.12); }
+}
+@media (max-width: 760px) and (prefers-color-scheme: dark) {
+  .tabbar .tab-pill.lens { background: rgba(255,255,255,.10); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 0.5px rgba(255,255,255,.25), 0 10px 30px rgba(0,0,0,.5); }
+}
+.route.dir-sr { animation-name: swipeR; animation-duration: .38s; }
+.route.dir-sl { animation-name: swipeL; animation-duration: .38s; }
+@keyframes swipeR { from { opacity: .3; transform: translateX(45%); } to { opacity: 1; transform: none; } }
+@keyframes swipeL { from { opacity: .3; transform: translateX(-45%); } to { opacity: 1; transform: none; } }
+.route.dir-sr .page > *, .route.dir-sl .page > * { animation: none !important; }

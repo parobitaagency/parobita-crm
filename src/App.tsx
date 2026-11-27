@@ -1,10 +1,11 @@
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
 import { useEffect, useRef, useState } from 'react'
 import { hardReload } from './components/ErrorBoundary'
 import { prefetchAll } from './lib/prefetch'
 import LiquidPill from './components/LiquidPill'
+import TabBar, { pillCtl } from './components/TabBar'
 import Login from './pages/Login'
 import Today from './pages/Today'
 import Leads from './pages/Leads'
@@ -64,9 +65,10 @@ function Shell({ warn, name }: { warn: number; name: string }) {
   const idx = Math.max(0, NAV.findIndex((n) => (n.to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(n.to))))
   const lastIdx = useRef(idx)
   const dirRef = useRef('n')
-  if (idx !== lastIdx.current) { dirRef.current = idx > lastIdx.current ? 'r' : 'l'; lastIdx.current = idx }
+  const swipeNav = useRef(false)
+  if (idx !== lastIdx.current) { dirRef.current = (swipeNav.current ? 's' : '') + (idx > lastIdx.current ? 'r' : 'l'); swipeNav.current = false; lastIdx.current = idx }
   const dir = dirRef.current
-  const [pressing, setPressing] = useState(false)
+  const navigate = useNavigate()
   useEffect(() => {
     const el = mainRef.current; if (!el) return
     el.scrollTop = 0; setScrolled(false)
@@ -74,6 +76,74 @@ function Shell({ warn, name }: { warn: number; name: string }) {
     el.addEventListener('scroll', on, { passive: true })
     return () => el.removeEventListener('scroll', on)
   }, [loc.pathname])
+
+  // Sayfalar arasında parmakla sağa-sola kaydırma
+  useEffect(() => {
+    const main = mainRef.current; if (!main) return
+    let st: { x: number; y: number; t: number; lock: '' | 'h' | 'v'; dx: number; sc: HTMLElement | null } | null = null
+    const route = () => main.querySelector('.route') as HTMLElement | null
+    const hScroller = (t: HTMLElement | null) => {
+      for (let el = t; el && el !== main; el = el.parentElement) {
+        const ox = getComputedStyle(el).overflowX
+        if ((ox === 'auto' || ox === 'scroll') && el.scrollWidth > el.clientWidth + 2) return el
+      }
+      return null
+    }
+    const start = (e: TouchEvent) => {
+      if (e.touches.length !== 1 || !matchMedia('(max-width: 760px)').matches) return
+      const t = e.target as HTMLElement
+      if (t.closest('.panel, .scrim, input, textarea, select, .tg-body')) return
+      st = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), lock: '', dx: 0, sc: hScroller(t) }
+    }
+    const moveT = (e: TouchEvent) => {
+      if (!st) return
+      const dx = e.touches[0].clientX - st.x, dy = e.touches[0].clientY - st.y
+      if (!st.lock) {
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return
+        st.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'h' : 'v'
+        // İç içe yatay kaydırma: önce tablo kayar, kenara gelmişse sayfa kayar
+        if (st.lock === 'h' && st.sc) {
+          const sc = st.sc, atStart = sc.scrollLeft <= 1, atEnd = sc.scrollLeft + sc.clientWidth >= sc.scrollWidth - 1
+          if (!((dx > 0 && atStart) || (dx < 0 && atEnd))) { st = null; return }
+          st.x = e.touches[0].clientX
+        }
+      }
+      if (st.lock !== 'h') return
+      e.preventDefault()
+      const w = main.clientWidth
+      const hasNext = dx < 0 ? idx < NAV.length - 1 : idx > 0
+      const eff = hasNext ? dx : dx * 0.25
+      st.dx = eff
+      const r = route(); if (r) { r.style.transition = 'none'; r.style.animation = 'none'; r.style.transform = `translateX(${eff}px)`; r.style.opacity = String(1 - Math.min(0.35, Math.abs(eff) / w * 0.5)) }
+      if (hasNext) pillCtl.live(idx - eff / w)
+    }
+    const end = () => {
+      if (!st) return
+      const s = st; st = null
+      if (s.lock !== 'h') return
+      const w = main.clientWidth, v = Math.abs(s.dx) / Math.max(1, Date.now() - s.t)
+      const target = s.dx < 0 ? idx + 1 : idx - 1
+      const r = route()
+      if ((Math.abs(s.dx) > w * 0.22 || v > 0.45) && target >= 0 && target < NAV.length) {
+        if (r) { r.style.transition = 'transform .2s cubic-bezier(.4,0,.8,.6), opacity .2s'; r.style.transform = `translateX(${s.dx < 0 ? -w * 0.5 : w * 0.5}px)`; r.style.opacity = '0' }
+        pillCtl.from = idx - s.dx / w
+        swipeNav.current = true
+        setTimeout(() => navigate(NAV[target].to), 140)
+      } else {
+        if (r) { r.style.transition = 'transform .45s cubic-bezier(.34,1.35,.64,1), opacity .3s'; r.style.transform = ''; r.style.opacity = '' }
+        pillCtl.live(null); pillCtl.from = idx - s.dx / w
+        // hap geri yaylansın
+        const el = document.querySelector('.tab-pill') as HTMLElement | null
+        if (el) { el.animate([{ transform: `translateX(${(idx - s.dx / w) * 100}%)` }, { transform: `translateX(${idx * 100}%)` }], { duration: 420, easing: 'cubic-bezier(.34,1.4,.64,1)' }); el.style.transform = `translateX(${idx * 100}%)` }
+        pillCtl.from = null
+      }
+    }
+    main.addEventListener('touchstart', start, { passive: true })
+    main.addEventListener('touchmove', moveT, { passive: false })
+    main.addEventListener('touchend', end)
+    main.addEventListener('touchcancel', end)
+    return () => { main.removeEventListener('touchstart', start); main.removeEventListener('touchmove', moveT); main.removeEventListener('touchend', end); main.removeEventListener('touchcancel', end) }
+  }, [idx, navigate])
   return (
     <div className={'app' + (scrolled ? ' scrolled' : '')}>
       <aside className="side">
@@ -105,17 +175,7 @@ function Shell({ warn, name }: { warn: number; name: string }) {
           </Routes>
         </div>
       </main>
-      <nav className={'tabbar' + (pressing ? ' pressing' : '')} style={{ ['--n' as string]: NAV.length }}
-        onPointerDown={() => setPressing(true)} onPointerUp={() => setPressing(false)} onPointerCancel={() => setPressing(false)} onPointerLeave={() => setPressing(false)}>
-        <LiquidPill idx={idx} axis="x" className="tab-pill" />
-        {NAV.map((n) => (
-          <NavLink key={n.to} to={n.to} end className={({ isActive }) => (isActive ? 'active' : '')}>
-            {n.icon}
-            {n.label}
-            {n.to === '/toplantilar' && warn > 0 && <span className="badge">{warn}</span>}
-          </NavLink>
-        ))}
-      </nav>
+      <TabBar items={NAV} idx={idx} badge={(to) => (to === '/toplantilar' ? warn : 0)} />
     </div>
   )
 }
