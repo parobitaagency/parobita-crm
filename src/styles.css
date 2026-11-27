@@ -291,3 +291,33 @@ textarea.input { height: auto; min-height: 72px; padding: 8px 10px; resize: vert
   font-size: 12px; padding: calc(4px + var(--safe-t)) 8px 4px;
   background: var(--t-yellow-bg); color: var(--t-yellow);
 }
+
+/* Takvim */
+.cal-nav { display: flex; align-items: center; gap: 4px; margin: 4px 0 10px; flex-wrap: wrap; }
+.cal-title { font-weight: 600; margin: 0 4px; }
+.cal-legend { display: flex; gap: 4px; margin-left: 6px; }
+.cal-week { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.cal-col { min-height: 360px; border-right: 1px solid var(--line); padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.cal-col:last-child { border-right: 0; }
+.cal-col.today { background: var(--bg-side); }
+.cal-head { display: flex; justify-content: space-between; align-items: baseline; color: var(--text-3); font-size: 12px; margin-bottom: 4px; }
+.cal-head b { color: var(--text); font-size: 15px; }
+.cal-col.today .cal-head b { background: var(--danger); color: #fff; border-radius: 999px; padding: 0 7px; }
+.cal-ev { border-radius: 4px; padding: 4px 6px; cursor: pointer; font-size: 12.5px; line-height: 1.3; border-left: 3px solid; }
+.cal-ev.blue { background: var(--t-blue-bg); color: var(--t-blue); border-color: #2383e2; }
+.cal-ev.purple { background: var(--t-purple-bg); color: var(--t-purple); border-color: #9065b0; }
+.cal-ev.gray { background: var(--t-gray-bg); color: var(--t-gray); border-color: var(--text-3); }
+.cal-ev.done { opacity: .55; }
+.cal-ev-t { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cal-ev-n { font-weight: 500; }
+.cal-ev-s { opacity: .8; }
+.cal-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px; }
+.cal-day { border: 0; background: none; border-radius: 10px; padding: 6px 0; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; position: relative; }
+.cal-day span { font-size: 11px; color: var(--text-3); }
+.cal-day b { font-size: 16px; }
+.cal-day.today b { color: var(--danger); }
+.cal-day.on { background: var(--text); }
+.cal-day.on span, .cal-day.on b { color: var(--bg); }
+.cal-day i { width: 5px; height: 5px; border-radius: 50%; background: var(--danger); position: absolute; bottom: 3px; }
+.cal-daylist { display: flex; flex-direction: column; gap: 6px; }
+.cal-daylist .cal-ev { font-size: 14px; padding: 8px 10px; }

@@ -29,8 +29,9 @@ export default function App() {
   if (!me)
     return (
       <div className="login"><div className="box">
-        <h1>Hesap hazır değil</h1>
-        <p className="muted">Bu e-posta için profil tanımlanmamış. Burak'a haber ver.</p>
+        <h1>{navigator.onLine ? 'Hesap hazır değil' : 'İnternet yok'}</h1>
+        <p className="muted">{navigator.onLine ? 'Bu e-posta için profil tanımlanmamış. Burak\'a haber ver.' : 'Uygulamayı bir kere internetliyken aç; sonra internetsiz de çalışır.'}</p>
+        {!navigator.onLine && <button className="btn" style={{ marginRight: 8 }} onClick={() => location.reload()}>Tekrar dene</button>}
         <button className="btn" onClick={() => supabase.auth.signOut()}>Çıkış yap</button>
       </div></div>
     )

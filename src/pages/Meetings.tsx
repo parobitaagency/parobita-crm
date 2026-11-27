@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fmtTime, supabase, type Meeting } from '../lib/supabase'
 import MeetingPanel from '../components/MeetingPanel'
+import CalendarView from '../components/CalendarView'
 
 const SEL = '*, leads(business_name, phone, address, district, maps_url)'
 
@@ -32,6 +33,8 @@ export default function Meetings() {
   const [awaiting, setAwaiting] = useState<Meeting[]>([])
   const [upcoming, setUpcoming] = useState<Meeting[]>([])
   const [open, setOpen] = useState<Meeting | null>(null)
+  const [tab, setTab] = useState<'liste' | 'takvim'>(() => (localStorage.getItem('pb-meet-tab') as 'liste' | 'takvim') ?? 'liste')
+  const pick = (t: 'liste' | 'takvim') => { setTab(t); try { localStorage.setItem('pb-meet-tab', t) } catch { /* */ } }
 
   const load = useCallback(async () => {
     const start = new Date(); start.setHours(0, 0, 0, 0)
@@ -60,6 +63,14 @@ export default function Meetings() {
         <div className="subtitle">{upcoming.length} yaklaşan</div>
       </div>
 
+      <div className="toolbar">
+        <button className={'tab' + (tab === 'liste' ? ' on' : '')} onClick={() => pick('liste')}>Liste</button>
+        <button className={'tab' + (tab === 'takvim' ? ' on' : '')} onClick={() => pick('takvim')}>Takvim</button>
+      </div>
+
+      {tab === 'takvim' && <CalendarView onOpen={setOpen} />}
+      {tab === 'liste' && <>
+
       {missing.length > 0 && (
         <>
           <div className="callout"><span className="ic">⚠️</span><div><b>{missing.length} toplantıda eksik bilgi var.</b> Saat ya da yetkili adı girilmemiş.</div></div>
@@ -81,6 +92,7 @@ export default function Meetings() {
         </div>
       ))}
       {upcoming.length === 0 && missing.length === 0 && awaiting.length === 0 && <div className="empty">Planlı toplantı yok.</div>}
+      </>}
 
       {open && <MeetingPanel meeting={open} onClose={() => setOpen(null)} onSaved={load} />}
     </div>

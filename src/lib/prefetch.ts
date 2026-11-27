@@ -16,7 +16,16 @@ export async function prefetchAll(meId: string) {
       supabase.from('meetings_awaiting_result').select('id'),
       supabase.from('deals').select('*, leads(business_name, phone, district), payments(amount)').order('updated_at', { ascending: false }),
       supabase.from('rivalry').select('*'),
+      supabase.from('meetings').select(MEET_SEL).neq('status', 'iptal')
+        .gte('scheduled_at', calFrom()).lte('scheduled_at', calTo()).order('scheduled_at'),
       supabase.from('leads').select('niche').not('niche', 'is', null),
     ])
   } catch { /* önemli değil */ }
 }
+
+const DAY = 86400000
+function calFrom() {
+  const x = new Date(); x.setHours(0, 0, 0, 0); const wd = (x.getDay() + 6) % 7
+  return new Date(x.getTime() - wd * DAY - 35 * DAY).toISOString().slice(0, 10)
+}
+function calTo() { return new Date(Date.now() + 90 * DAY).toISOString().slice(0, 10) }
