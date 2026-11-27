@@ -1,0 +1,184 @@
+/* Liquid Glass katmanı — styles.css'in üstüne yazar */
+:root {
+  --bg: #eef0f4;
+  --glass: rgba(255, 255, 255, 0.58);
+  --glass-strong: rgba(255, 255, 255, 0.78);
+  --glass-solid: #f7f8fa;
+  --glass-edge: rgba(255, 255, 255, 0.75);
+  --glass-line: rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(30, 40, 60, 0.10);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 0.5px rgba(255, 255, 255, 0.6);
+  --blur: blur(28px) saturate(180%);
+  --r: 20px;
+  --r-sm: 14px;
+  --accent: #0a84ff;
+  --text: #1c1c1e;
+  --text-2: rgba(60, 60, 67, 0.72);
+  --text-3: rgba(60, 60, 67, 0.48);
+  --line: rgba(60, 60, 67, 0.10);
+  --line-2: rgba(60, 60, 67, 0.18);
+  --bg-hover: rgba(120, 120, 128, 0.10);
+  --bg-active: rgba(120, 120, 128, 0.16);
+  --bg-side: rgba(120, 120, 128, 0.08);
+  --danger: #ff3b30;
+  --font: -apple-system, "SF Pro Text", "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0c0f;
+    --glass: rgba(44, 46, 54, 0.52);
+    --glass-strong: rgba(48, 50, 58, 0.74);
+    --glass-solid: #1b1c21;
+    --glass-edge: rgba(255, 255, 255, 0.14);
+    --glass-line: rgba(255, 255, 255, 0.07);
+    --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 10px 32px rgba(0, 0, 0, 0.45);
+    --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+    --text: rgba(255, 255, 255, 0.94);
+    --text-2: rgba(235, 235, 245, 0.62);
+    --text-3: rgba(235, 235, 245, 0.38);
+    --line: rgba(255, 255, 255, 0.08);
+    --line-2: rgba(255, 255, 255, 0.14);
+    --bg-hover: rgba(255, 255, 255, 0.07);
+    --bg-active: rgba(255, 255, 255, 0.12);
+    --bg-side: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Arka plan: camın arkasında hafif, nötr ışık lekeleri */
+body {
+  background: var(--bg);
+  font-family: var(--font);
+  letter-spacing: -0.005em;
+}
+body::before {
+  content: ''; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 18% 12%, rgba(120, 160, 255, 0.22), transparent 70%),
+    radial-gradient(35% 30% at 85% 20%, rgba(255, 190, 150, 0.18), transparent 70%),
+    radial-gradient(45% 40% at 70% 90%, rgba(140, 220, 200, 0.16), transparent 70%),
+    radial-gradient(35% 35% at 10% 85%, rgba(200, 170, 255, 0.14), transparent 70%);
+}
+@media (prefers-color-scheme: dark) {
+  body::before { opacity: .55; }
+}
+
+/* Ortak cam yüzey */
+.side, .tabbar, .panel, .stats, .rival, .card, .callout, .tg, .cal-week,
+.list, .table-wrap, .login .box, .offline-bar, .dropdown {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  box-shadow: var(--glass-shadow), var(--glass-hi);
+  border: 0.5px solid var(--glass-edge);
+}
+
+/* Kenar çubuğu: yüzen cam */
+.app { background: transparent; }
+.side { margin: 12px 0 12px 12px; border-radius: 24px; padding: 12px 8px; width: 232px; border-right: 0.5px solid var(--glass-edge); }
+.ws-icon { border-radius: 8px; width: 26px; height: 26px; }
+.nav-item { border-radius: 12px; min-height: 36px; padding: 6px 12px; }
+.nav-item.active { background: var(--glass-strong); box-shadow: var(--glass-hi), 0 1px 3px rgba(0,0,0,.06); }
+.nav-item svg, .tabbar svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* Başlıklar: iOS büyük başlık */
+.page { padding-top: 56px; }
+h1.title { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; }
+.page-icon { display: none; }
+h2.section { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 30px 0 10px; }
+
+/* Listeler ve tablolar cam kartlar içinde */
+.list { border-radius: var(--r); padding: 4px; overflow: hidden; }
+.item { border-radius: 12px; }
+.table-wrap { border-radius: var(--r); padding: 0; margin: 0; }
+.table th { background: transparent; }
+.table td { border-bottom-color: var(--glass-line); }
+.table tr:last-child td { border-bottom: 0; }
+.table .sticky { background: var(--glass-solid); }
+.table tr:hover td.sticky { background: var(--glass-solid); }
+.table.sheet th, .table.sheet td { border-right-color: var(--glass-line); }
+.toolbar { border-bottom: 0; gap: 6px; padding: 6px 0 10px; }
+.tab { border-radius: 999px; padding: 6px 14px; }
+.tab.on { box-shadow: var(--glass-hi), 0 1px 3px rgba(0,0,0,.08); background: var(--glass-strong); border-radius: 999px; }
+.search { border-radius: 999px; background: var(--bg-hover); padding: 0 14px; height: 34px; }
+select.filter { border-radius: 999px; padding: 6px 12px; background: var(--bg-hover); }
+
+/* İstatistik, rakip, kart, callout */
+.stats { border-radius: var(--r); gap: 0; background: var(--glass); }
+.stat { background: transparent; border-right: 0.5px solid var(--glass-line); }
+.stat:last-child { border-right: 0; }
+.stat .v { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+.rival { border-radius: var(--r); padding: 16px; }
+.card { border-radius: var(--r-sm); padding: 12px; }
+.card:hover { background: var(--glass-strong); }
+.callout { border-radius: var(--r); }
+.callout.neutral { background: var(--glass); }
+.progress { height: 6px; border-radius: 3px; }
+.progress > div { background: var(--accent); border-radius: 3px; }
+.tag { border-radius: 999px; padding: 1px 9px; }
+
+/* Butonlar: kapsül */
+.btn { border-radius: 999px; height: 36px; padding: 0 16px; border: 0.5px solid var(--glass-edge); background: var(--glass);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--glass-hi), 0 1px 2px rgba(0,0,0,.06); }
+.btn:hover { background: var(--glass-strong); }
+.btn.primary { background: var(--accent); color: #fff; border-color: rgba(255,255,255,.25);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 6px 18px rgba(10,132,255,.35); }
+.btn.ghost { background: transparent; box-shadow: none; border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.btn.big { height: 52px; font-size: 17px; font-weight: 600; }
+.icon-btn { border-radius: 999px; width: 32px; height: 32px; }
+.outcome { border-radius: var(--r-sm); background: var(--glass); border: 0.5px solid var(--glass-edge); box-shadow: var(--glass-hi); }
+.outcome.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.chip { border-radius: 999px; background: var(--glass); border: 0.5px solid var(--glass-edge); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.input { border-radius: 12px; background: var(--bg-hover); border: 0.5px solid transparent; height: 40px; }
+.input:focus { background: var(--glass-strong); border-color: var(--accent); box-shadow: 0 0 0 4px rgba(10,132,255,.18); }
+
+/* Panel: cam sayfa */
+.scrim { background: rgba(0,0,0,.18); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.panel { top: 12px; right: 12px; bottom: 12px; border-radius: 28px; background: var(--glass-strong); width: min(560px, calc(100% - 24px)); }
+.panel-top { background: transparent; -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); border-radius: 28px 28px 0 0; }
+.props .pv { border-radius: 10px; }
+
+/* Takvim */
+.tg { border-radius: var(--r); }
+.tg-header { border-bottom-color: var(--glass-line); }
+.tg-col { border-left-color: var(--glass-line); }
+.tg-slot { border-bottom-color: var(--glass-line); }
+.tg-ev { border-radius: 10px; border: 0.5px solid rgba(255,255,255,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 2px 8px rgba(0,0,0,.12); }
+.tg-ev.blue { background: rgba(10,132,255,.88); }
+.tg-ev.purple { background: rgba(142,91,196,.88); }
+.tg-dh.today b { background: var(--accent); }
+.cal-day { border-radius: 14px; }
+.cal-day.on { background: var(--accent); }
+.cal-day.on span, .cal-day.on b { color: #fff; }
+.cal-week { border-radius: var(--r); }
+
+/* Giriş ve kilit ekranı */
+.login .box { border-radius: 28px; padding: 28px 24px; }
+
+.offline-bar { border-radius: 0 0 16px 16px; background: rgba(255, 204, 0, .75); color: #3a2a00; }
+
+/* Mobil: yüzen kapsül sekme çubuğu */
+@media (max-width: 760px) {
+  .page, .page.wide { padding-top: calc(16px + var(--safe-t)); padding-bottom: calc(110px + var(--safe-b)); }
+  h1.title { font-size: 34px; }
+  .tabbar {
+    left: 14px; right: 14px; bottom: calc(10px + var(--safe-b)); padding: 6px;
+    border-radius: 999px; border-top: 0.5px solid var(--glass-edge); gap: 2px;
+  }
+  .tabbar a { padding: 6px 0 5px; border-radius: 999px; font-size: 10.5px; font-weight: 600; gap: 2px; color: var(--text-2); }
+  .tabbar a.active { background: var(--glass-strong); color: var(--accent); box-shadow: var(--glass-hi), 0 1px 4px rgba(0,0,0,.08); }
+  .tabbar svg { width: 24px; height: 24px; }
+  .tabbar .badge { top: 2px; left: 58%; }
+  .panel { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 92vh; border-radius: 28px 28px 0 0; animation: sheet .22s cubic-bezier(.2,.9,.3,1); }
+  .panel-top { border-radius: 28px 28px 0 0; padding-top: 10px; }
+  .panel-top::before { content: ''; position: absolute; top: 6px; left: 50%; width: 38px; height: 5px; border-radius: 3px; background: var(--line-2); transform: translateX(-50%); }
+  .table-wrap { margin: 0; padding: 0; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2) { border-right: 0; }
+  .stat:nth-child(-n+2) { border-bottom: 0.5px solid var(--glass-line); }
+  .rivals { gap: 10px; }
+}
+@keyframes sheet { from { transform: translateY(40px); opacity: .5; } to { transform: none; opacity: 1; } }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --glass: var(--glass-solid); --glass-strong: var(--glass-solid); }
+}
