@@ -5,12 +5,14 @@ import './styles.css'
 import App from './App'
 import { SessionProvider } from './lib/session'
 import ErrorBoundary from './components/ErrorBoundary'
+import OfflineBar from './components/OfflineBar'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
     <BrowserRouter>
       <SessionProvider>
+        <OfflineBar />
         <App />
       </SessionProvider>
     </BrowserRouter>

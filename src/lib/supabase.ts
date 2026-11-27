@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
+import { configureOffline, offlineFetch } from './offline'
 
 // Publishable anahtar tarayıcıda durabilir; erişim satır kurallarıyla (RLS) korunur.
 export const supabase = createClient(
   'https://lzxkowlecpiwvbwrjqxs.supabase.co',
   'sb_publishable_-cMxpW6ET4taE0in1oE7iw_sDDVtR4m',
+  { global: { fetch: offlineFetch } },
 )
+configureOffline(async () => (await supabase.auth.getSession()).data.session?.access_token ?? null)
 
 export type LeadStatus = 'yeni' | 'acmadi' | 'sonra_ara' | 'red' | 'toplanti' | 'musteri'
 

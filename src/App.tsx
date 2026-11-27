@@ -3,6 +3,7 @@ import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
 import { useEffect, useState } from 'react'
 import { hardReload } from './components/ErrorBoundary'
+import { prefetchAll } from './lib/prefetch'
 import Login from './pages/Login'
 import Today from './pages/Today'
 import Leads from './pages/Leads'
@@ -18,6 +19,11 @@ const NAV = [
 
 export default function App() {
   const { session, me, badges, marathon, loading } = useSession()
+  useEffect(() => {
+    if (!me) return
+    const t = setTimeout(() => prefetchAll(me.id), 1500)
+    return () => clearTimeout(t)
+  }, [me])
   if (loading) return <Loading />
   if (!session) return <Login />
   if (!me)
