@@ -233,3 +233,129 @@ select.filter { border-radius: 999px; padding: 6px 12px; background: var(--bg-ho
   .tabbar a { font-size: 10px; }
 }
 @media (max-width: 760px) { .seg .tab { padding: 5px 11px; font-size: 13px; } .seg { flex-wrap: nowrap; overflow-x: auto; } }
+
+/* ===== Liquid Glass v2: gerçek saydamlık, ışık kenarı, hareket ===== */
+:root { --glass: rgba(255, 255, 255, 0.42); --glass-strong: rgba(255, 255, 255, 0.66);
+  --spring: cubic-bezier(.34, 1.45, .64, 1); --ease: cubic-bezier(.2, .9, .25, 1); }
+@media (prefers-color-scheme: dark) { :root { --glass: rgba(40, 42, 50, 0.40); --glass-strong: rgba(56, 58, 68, 0.62); } }
+
+/* Arkadaki ışık lekeleri yavaşça süzülür; cam bunların üstünde kırılır */
+body::before { animation: drift 28s ease-in-out infinite alternate; }
+body::after {
+  content: ''; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+  background: radial-gradient(30% 25% at 60% 45%, rgba(10, 132, 255, 0.16), transparent 70%),
+              radial-gradient(25% 22% at 30% 60%, rgba(255, 120, 170, 0.10), transparent 70%);
+  animation: drift2 34s ease-in-out infinite alternate;
+}
+@keyframes drift { 0% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(4%, -3%) rotate(8deg); } 100% { transform: translate(-3%, 4%) rotate(-6deg); } }
+@keyframes drift2 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-8%, 6%) scale(1.15); } }
+
+/* Işık kenarı (specular rim) */
+.side, .stats, .rival, .viz-card, .list, .callout, .card, .login .box, .btn, .tg { position: relative; }
+.stats { position: relative; }
+.side::after, .tabbar::after, .stats::after, .rival::after, .viz-card::after, .list::after, .callout::after,
+.card::after, .topbar::after, .login .box::after, .panel::after, .btn::after, .tg::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 3;
+  background: linear-gradient(140deg, rgba(255,255,255,.95), rgba(255,255,255,.15) 32%, rgba(255,255,255,0) 50%, rgba(255,255,255,.12) 70%, rgba(255,255,255,.7));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+@media (prefers-color-scheme: dark) {
+  .side::after, .tabbar::after, .stats::after, .rival::after, .viz-card::after, .list::after, .callout::after,
+  .card::after, .topbar::after, .login .box::after, .panel::after, .btn::after, .tg::after { opacity: .35; }
+}
+.btn.ghost::after { display: none; }
+/* Üst yüzeyde hafif parlama */
+.tabbar::before, .topbar::before, .side::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 45%);
+}
+@media (prefers-color-scheme: dark) { .tabbar::before, .topbar::before, .side::before { opacity: .25; } }
+
+/* Kayan cam hap: alt menü */
+.tabbar .tab-pill { display: none; }
+@media (max-width: 760px) {
+  .tabbar { -webkit-backdrop-filter: blur(22px) saturate(200%); backdrop-filter: blur(22px) saturate(200%); }
+  .tabbar .tab-pill {
+    display: block; position: absolute; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / var(--n));
+    transform: translateX(calc(var(--i) * 100%)); transition: transform .5s var(--spring);
+    border-radius: 999px; background: var(--glass-strong); box-shadow: var(--glass-hi), 0 2px 10px rgba(0,0,0,.10); z-index: 0;
+  }
+  .tabbar a { z-index: 1; background: transparent !important; box-shadow: none !important; transition: color .25s, transform .3s var(--spring); }
+  .tabbar a:active { transform: scale(.88); }
+  .tabbar a.active svg { animation: pop .45s var(--spring); }
+}
+@keyframes pop { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+
+/* Kayan cam hap: kenar çubuğu */
+.side-nav { position: relative; display: flex; flex-direction: column; gap: 2px; }
+.side-nav .nav-item { height: 36px; min-height: 36px; position: relative; z-index: 1; background: transparent !important; box-shadow: none !important; }
+.side-pill {
+  position: absolute; left: 0; right: 0; top: 0; height: 36px; border-radius: 12px; z-index: 0;
+  transform: translateY(calc(var(--i) * 38px)); transition: transform .5s var(--spring);
+  background: var(--glass-strong); box-shadow: var(--glass-hi), 0 1px 4px rgba(0,0,0,.08);
+}
+
+/* Kaydırınca beliren cam başlık; içerik arkasından akar */
+.topbar {
+  position: fixed; top: 0; left: 256px; right: 0; z-index: 25; height: calc(52px + var(--safe-t)); padding-top: var(--safe-t);
+  display: grid; place-items: center; font-weight: 600; font-size: 16px; letter-spacing: -0.01em;
+  background: var(--glass); -webkit-backdrop-filter: blur(24px) saturate(190%); backdrop-filter: blur(24px) saturate(190%);
+  border: 0; border-bottom: 0.5px solid var(--glass-edge); border-radius: 0;
+  opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .25s var(--ease), transform .35s var(--ease);
+}
+.topbar::after { display: none; }
+.app.scrolled .topbar { opacity: 1; transform: none; }
+.topbar span { transform: translateY(6px); transition: transform .4s var(--spring); }
+.app.scrolled .topbar span { transform: none; }
+@media (max-width: 760px) { .topbar { left: 0; } }
+.page-head h1.title { transition: opacity .2s, transform .3s var(--ease); }
+.app.scrolled .page-head h1.title { opacity: .0; transform: scale(.96) translateY(-4px); transform-origin: left; }
+
+/* Sayfa geçişi ve kademeli giriş */
+.route { animation: routeIn .45s var(--ease) backwards; }
+@keyframes routeIn { from { opacity: 0; transform: translateY(10px) scale(.995); } to { opacity: 1; transform: none; } }
+.route .page > *:not(.panel):not(.scrim) { animation: rise .55s var(--ease) backwards; }
+.route .page > *:nth-child(2) { animation-delay: .04s; }
+.route .page > *:nth-child(3) { animation-delay: .08s; }
+.route .page > *:nth-child(4) { animation-delay: .12s; }
+.route .page > *:nth-child(5) { animation-delay: .16s; }
+.route .page > *:nth-child(6) { animation-delay: .20s; }
+.route .page > *:nth-child(n+7) { animation-delay: .24s; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Dokunma: yaylı basılma */
+.btn, .card, .item, .tab, .chip, .outcome, .nav-item, .stat, .cal-day, .icon-btn, .rival {
+  transition: transform .35s var(--spring), background-color .2s, box-shadow .2s, color .2s;
+}
+.btn:active, .card:active, .item:active, .tab:active, .chip:active, .outcome:active, .icon-btn:active, .cal-day:active { transform: scale(.96); }
+.stats-link:active { transform: scale(.985); }
+.card:hover, .rival:hover { transform: translateY(-2px); }
+
+/* Birincil butonda ışık süpürmesi */
+.btn.primary { overflow: hidden; }
+.btn.primary::before {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent);
+  animation: sheen 4.5s ease-in-out infinite;
+}
+@keyframes sheen { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+
+/* Panel: yaylı açılış, arkası bulanık */
+.scrim { -webkit-backdrop-filter: blur(6px) saturate(120%); backdrop-filter: blur(6px) saturate(120%); background: rgba(0,0,0,.12); animation: fadeIn .25s both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.panel { animation: panelIn .5s var(--spring) both; }
+@keyframes panelIn { from { transform: translateX(40px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 760px) { .panel { animation: sheetIn .55s var(--spring) both; } }
+@keyframes sheetIn { from { transform: translateY(70%); } to { transform: none; } }
+
+/* Grafik çubukları büyüyerek gelir */
+.viz-bar { transform-box: fill-box; transform-origin: bottom; animation: grow .6s var(--spring) both; }
+.hbar-fill { animation: growX .7s var(--spring) both; transform-origin: left; }
+@keyframes grow { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes growX { from { transform: scaleX(0); } to { transform: none; } }
+.progress > div { transition: width .8s var(--spring); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

@@ -1,7 +1,7 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { hardReload } from './components/ErrorBoundary'
 import { prefetchAll } from './lib/prefetch'
 import Login from './pages/Login'
@@ -53,32 +53,54 @@ export default function App() {
       </div></div>
     )
 
+  return <Shell warn={warn} name={me.full_name} />
+}
+
+function Shell({ warn, name }: { warn: number; name: string }) {
+  const loc = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
+  const [scrolled, setScrolled] = useState(false)
+  const idx = Math.max(0, NAV.findIndex((n) => (n.to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(n.to))))
+  useEffect(() => {
+    const el = mainRef.current; if (!el) return
+    el.scrollTop = 0; setScrolled(false)
+    const on = () => setScrolled(el.scrollTop > 56)
+    el.addEventListener('scroll', on, { passive: true })
+    return () => el.removeEventListener('scroll', on)
+  }, [loc.pathname])
   return (
-    <div className="app">
+    <div className={'app' + (scrolled ? ' scrolled' : '')}>
       <aside className="side">
         <div className="ws"><span className="ws-icon">P</span>Parobita</div>
-        {NAV.map((n) => (
-          <NavLink key={n.to} to={n.to} end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
-            {n.icon}
-            {n.label}
-            {n.to === '/toplantilar' && warn > 0 && <span className="count warn">{warn}</span>}
-          </NavLink>
-        ))}
+        <div className="side-nav" style={{ ['--i' as string]: idx }}>
+          <span className="side-pill" />
+          {NAV.map((n) => (
+            <NavLink key={n.to} to={n.to} end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+              {n.icon}
+              {n.label}
+              {n.to === '/toplantilar' && warn > 0 && <span className="count warn">{warn}</span>}
+            </NavLink>
+          ))}
+        </div>
         <div className="foot">
-          {me.full_name} · <a href="#" onClick={(e) => { e.preventDefault(); supabase.auth.signOut() }}>Çıkış</a>
+          {name} · <a href="#" onClick={(e) => { e.preventDefault(); supabase.auth.signOut() }}>Çıkış</a>
         </div>
       </aside>
-      <main className="main">
-        <Routes>
-          <Route path="/" element={<Today />} />
-          <Route path="/leadler" element={<Leads />} />
-          <Route path="/toplantilar" element={<Meetings />} />
-          <Route path="/satislar" element={<Deals />} />
-          <Route path="/analiz" element={<Analytics />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+      <div className="topbar" aria-hidden={!scrolled}><span>{NAV[idx]?.label}</span></div>
+      <main className="main" ref={mainRef}>
+        <div className="route" key={loc.pathname}>
+          <Routes location={loc}>
+            <Route path="/" element={<Today />} />
+            <Route path="/leadler" element={<Leads />} />
+            <Route path="/toplantilar" element={<Meetings />} />
+            <Route path="/satislar" element={<Deals />} />
+            <Route path="/analiz" element={<Analytics />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </div>
       </main>
-      <nav className="tabbar">
+      <nav className="tabbar" style={{ ['--i' as string]: idx, ['--n' as string]: NAV.length }}>
+        <span className="tab-pill" />
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end className={({ isActive }) => (isActive ? 'active' : '')}>
             {n.icon}
