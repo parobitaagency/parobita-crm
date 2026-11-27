@@ -13,9 +13,8 @@ begin
      and not exists (select 1 from calls c where c.lead_id = l.id and c.called_at >= l.served_at)
    order by l.served_at desc limit 1;
   if r.id is not null then
-    -- Sonucu girilmeden kapanan arama: sonucu sorma, aynı lead'i tekrar ara
-    pending := false;
-    update leads set served_at = now(), served_by = uid where id = r.id;
+    -- Sonucu girilmeden kapanan arama: kısayol "Tekrar ara / sonuç" seçtirir
+    pending := true;
   elsif extract(hour from (now() at time zone 'Europe/Istanbul')) >= 21
      or extract(hour from (now() at time zone 'Europe/Istanbul')) < 9 then
     -- Mesai dışı: sadece test lead'leri aranabilir
