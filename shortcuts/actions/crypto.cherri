@@ -1,0 +1,29 @@
+/*
+Cryptography Actions
+*/
+
+enum base64LineBreakMode {
+    'Every 76 Characters',
+    'Every 64 Characters',
+    'None'
+}
+
+// [Doc]: Base 64 Encode: Base 64 encodes input.
+action default 'base64encode' base64Encode(variable encodeInput: 'WFInput', base64LineBreakMode ?breakMode: 'WFBase64LineBreakMode' = "Every 76 Characters"): text {
+	"input": "Encode"
+}
+
+// [Doc]: Base 64 Decode: Base 64 decodes input.
+action 'base64encode' base64Decode(variable input: 'WFInput'): variable {
+	"WFEncodeMode": "Decode"
+}
+
+enum hashType {
+	'MD5',
+	'SHA1',
+	'SHA256',
+	'SHA512',
+}
+
+// [Doc]: Hash: Generate a hash of type using input.
+action hash(variable input: 'WFInput', hashType ?type: 'WFHashType' = "MD5"): text

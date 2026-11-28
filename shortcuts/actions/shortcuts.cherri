@@ -1,0 +1,39 @@
+/*
+Shortcut Actions
+*/
+
+app Shortcuts 'com.apple.shortcuts' {
+    'CreateShortcutiCloudLinkAction',
+    'CreateWorkflowAction',
+    'SearchShortcutsAction',
+    'OpenWorkflowAction'
+}
+
+enum shortcutDetail {
+	'Folder',
+	'Icon',
+	'Action Count',
+	'File Size',
+	'File Extension Creation Date',
+	'File Path',
+	'Last Modified Date',
+	'Name',
+}
+
+// [Doc]: Get Shortcuts: Get all of the Shortcuts on the device.
+action 'getmyworkflows' getShortcuts(): array
+
+// [Doc]: Get Shortcut Detail: Get a detail about a Shortcut.
+action 'properties.workflow' getShortcutDetail(variable shortcut: 'WFInput', shortcutDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: Search Shortcuts: Search the users Shortcuts.
+action v16.4 #Shortcuts.SearchShortcutsAction searchShortcuts(text query: 'searchPhrase')
+
+// [Doc]: Make Shortcut: Create a shortcut.
+action v16.4 #Shortcuts.CreateWorkflowAction makeShortcut(text name, bool ?open: 'OpenWhenRun' = true)
+
+// [Doc]: Create Shortcut Link: Create an iCloud link to a Shortcut.
+action #Shortcuts.CreateShortcutiCloudLinkAction createShortcutLink(variable shortcut)
+
+// [Doc]: Open Shortcut: Open a shortcut in the Shortcuts app.
+action internal #Shortcuts.OpenWorkflowAction openShortcut(text shortcutName)

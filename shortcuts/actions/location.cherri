@@ -1,0 +1,130 @@
+/*
+Location Actions
+*/
+
+app Weather 'com.apple.weather' {
+    'AddSavedLocationIntent',
+    'RemoveSavedLocationIntent'
+}
+
+// [Doc]: Location: Create a location value.
+action default location(text location: 'WFLocation')
+
+// [Doc]: Current Location: Get current user location.
+action 'location' currentLocation() {
+	"WFLocation": {
+		"isCurrentLocation": true
+	}
+}
+
+// [Doc]: Home Location: Get the home location of whoever runs the shortcut.
+action !mac v27 'location' homeLocation() {
+	"WFLocation": {
+		"isHomeLocation": true
+	}
+}
+
+// [Doc]: Work Location: Get the work location of whoever runs the shortcut.
+action !mac v27 'location' workLocation() {
+	"WFLocation": {
+		"isWorkLocation": true
+	}
+}
+
+enum travelMode {
+	'Driving',
+	'Walking',
+	'Transit',
+	'Biking',
+}
+
+// [Doc]: Get Travel Time: Get the travel time to `destination` using `mode`, starting at `start` or the current location. Avoiding tolls and highways are new in version 27.
+action internal 'gettraveltime' getTravelTime(travelMode mode: 'WFGetDirectionsActionMode', variable destination: 'WFDestination', variable ?start: 'WFGetDirectionsCustomLocation', bool ?avoidTolls: 'WFAvoidTolls' = false, bool ?avoidHighways: 'WFAvoidHighways' = false): number
+
+// [Doc]: Get Current Location
+action 'getcurrentlocation' getCurrentLocation()
+
+enum locationDetail {
+    'Name',
+    'URL',
+    'Label',
+    'Phone Number',
+    'Region',
+    'ZIP Code',
+    'State',
+    'City',
+    'Street',
+    'Altitude',
+    'Longitude',
+    'Latitude',
+}
+
+// [Doc]: Get Location Detail: Get a detail about a location.
+action 'properties.locations' getLocationDetail(variable location: 'WFInput', locationDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: [Addresses] Get Addresses: Get addresses from `input`.
+action 'detect.address' getAddresses(variable input: 'WFInput')
+
+// [Doc]: [Addresses] Street Address: Create a location value with an address.
+action 'address' streetAddress(
+    text addressLine2: 'WFAddressLine1',
+    text addressLine2: 'WFAddressLine2',
+    text city: 'WFCity',
+    text state: 'WFState',
+    text country: 'WFCountry',
+    number zipCode: 'WFPostalCode'
+)
+
+// [Doc]: [Maps] Open in Maps: Open a location in maps.
+action 'searchmaps' openInMaps(variable location: 'WFInput')
+
+// [Doc]: [Maps] Get Maps Link: Get a link for a location.
+action getMapsLink(variable location: 'WFInput')
+
+// [Doc]: [Maps] Get Halfway Point: Get the halfway point between two locations.
+action getHalfwayPoint(variable firstLocation: 'WFGetHalfwayPointFirstLocation', variable secondLocation: 'WFGetHalfwayPointSecondLocation')
+
+// [Doc]: [Weather] Get Current Weather: Get the current weather for a location.
+action 'weather.currentconditions' getCurrentWeather(text ?location: 'WFWeatherCustomLocation' = "Current Location")
+
+enum weatherForecastTypes {
+    'Daily',
+    'Hourly',
+}
+
+// [Doc]: [Weather] Get Weather Forecast: Get various types of weather forecast for a location.
+action 'weather.forecast' getWeatherForecast(weatherForecastTypes ?type: 'WFWeatherForecastType' = "Daily", text ?location: 'WFInput' = "Current Location")
+
+enum weatherDetail {
+	'Name',
+	'Air Pollutants',
+	'Air Quality Category',
+	'Air Quality Index',
+	'Sunset Time',
+	'Sunrise Time',
+	'UV Index',
+	'Wind Direction',
+	'Wind Speed',
+	'Precipitation Chance',
+	'Precipitation Amount',
+	'Pressure',
+	'Humidity',
+	'Dewpoint',
+	'Visibility',
+	'Condition',
+	'Feels Like',
+	'Low',
+	'High',
+	'Temperature',
+	'Location',
+	'Date',
+}
+
+// [Doc]: [Weather] Get Weather Detail: Get a detail about a weather forecast.
+action 'properties.weather.conditions' getWeatherDetail(variable weather: 'WFInput', weatherDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: [Weather] Add Location to List: Add a location to Weather app.
+action #Weather.AddSavedLocationIntent addWeatherLocation(variable location: 'placemark')
+
+// [Doc]: [Weather] Remove Location from List: Remove a location from the Weather app.
+action #Weather.RemoveSavedLocationIntent removeWeatherLocation(variable location: 'entities')

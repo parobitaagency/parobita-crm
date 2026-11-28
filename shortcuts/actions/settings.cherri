@@ -1,0 +1,97 @@
+/*
+Settings Actions
+*/
+
+app ShortcutsActions 'com.apple.ShortcutsActions' {
+    'SetMultitaskingModeAction',
+    'GetMultitaskingModeAction'
+}
+
+enum focusUntil {
+    'Turned Off',
+    'Time',
+    'I Leave',
+    'Event Ends'
+}
+
+// [Doc]: [Notifications] Turn On Do Not Disturb
+action 'dnd.set' DNDOn() {
+	"Enabled": 1,
+	"FocusModes": {
+		"DisplayString": "Do Not Disturb",
+		"Identifier": "com.apple.donotdisturb.mode.default"
+	}
+}
+
+// [Doc]: [Notifications] Turn Off Do Not Disturb
+action 'dnd.set' DNDOff() {
+	"Enabled": 0,
+	"FocusModes": {
+		"DisplayString": "Do Not Disturb",
+		"Identifier": "com.apple.donotdisturb.mode.default"
+	}
+}
+
+// [Doc]: [Notifications] Toggle Do Not Disturb
+action 'dnd.set' toggleDND() {
+    "Operation": "Toggle",
+    "FocusModes": {
+        "DisplayString": "Do Not Disturb",
+        "Identifier": "com.apple.donotdisturb.mode.default"
+    }
+}
+
+// [Doc]: [Notifications] Get Focus Mode: Get the current Focus Mode.
+action 'dnd.getfocus' getFocusMode()
+
+// [Doc]: [Multitasking] Get Multitasking Mode: Get the current multitasking mode.
+action v26 #ShortcutsActions.GetMultitaskingModeAction getMultitaskingMode(): text
+
+// [Doc]: [Appearance] Set Appearance to Light
+action 'appearance' lightMode() {
+	"operation": "set",
+	"style": "light"
+}
+
+// [Doc]: [Appearance] Set Appearance to Dark
+action default 'appearance' darkMode() {
+	"operation": "set",
+	"style": "dark"
+}
+
+// [Doc]: [Wallpaper] Set Wallpaper: Sets the device wallpaper to `input`.
+action 'wallpaper.set' setWallpaper(variable input: 'WFInput')
+
+// [Doc]: [Wallpaper] Get Wallpapers: Get device wallpapers.
+action default !mac v16.2 'posters.get' getAllWallpapers(): array
+
+// [Doc]: [Wallpaper] Get Wallpaper: Get current device wallpaper.
+action !mac v16.2 'posters.get' getWallpaper() {
+	"WFPosterType": "Current"
+}
+
+// [Doc]: [Appearance] Toggle Appearance
+action 'appearance' toggleAppearance() {
+    "operation": "toggle"
+}
+
+// [Doc]: [Display] Night Shift
+action toggleSet 'nightshift.set' NightShift 'OnValue'
+
+// [Doc]: [Display] True Tone
+action toggleSet 'truetone.set' TrueTone 'OnValue'
+
+// [Doc]: Stage Manager
+action toggleSet 'stagemanager.set' StageManager(bool showDock: 'showDock' = true, bool showRecentApps: 'showRecentApps' = true)
+
+// [Doc]: [Multitasking] Set Windowed Multitasking Mode: Set the multitasking mode to windowed. Applies to iPadOS and macOS only.
+action default internal v26 #ShortcutsActions.SetMultitaskingModeAction setWindowedMultitasking(bool ?automaticallyShowAndHideDock: 'automaticallyShowAndHideDock')
+
+// [Doc]: [Multitasking] Set Stage Manager Multitasking Mode: Set the multitasking mode to Stage Manager. Applies to iPadOS and macOS only.
+action internal v26 #ShortcutsActions.SetMultitaskingModeAction setStageManagerMultitasking(bool ?automaticallyShowAndHideDock: 'automaticallyShowAndHideDock', bool ?showRecentApps: 'showRecentApps')
+
+// [Doc]: [Notifications] Set Focus Mode: Set a default focus mode on or off. If setting to on, optionally set until with optional arguments for time or event.
+action internal 'dnd.set' setFocusMode(focusModes ?focusMode = "Do Not Disturb", focusUntil ?until: 'AssertionType' = "Turned Off", text ?time: 'Time', variable ?event: 'Event')
+
+// [Doc]: [Notifications] Toggle Focus Mode: Toggle a focus mode.
+action internal 'dnd.set' toggleFocusMode(focusModes ?focusMode = "Do Not Disturb")

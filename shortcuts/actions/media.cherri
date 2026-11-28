@@ -1,0 +1,164 @@
+/*
+Media Actions
+*/
+
+// [Doc]: Search App Store
+action searchAppStore(text query: 'WFSearchTerm')
+
+// [Doc]: Show In iTunes
+action 'showinstore' showIniTunes(variable product: 'WFProduct')
+
+enum audioQuality {
+	'Normal',
+	'Very High',
+}
+
+enum audioStart {
+	'On Tap',
+	'Immediately',
+}
+
+enum audioFormats {
+	'M4A',
+	'AIFF',
+}
+
+enum audioSpeeds {
+	'0.5X',
+	'Normal',
+	'2X',
+}
+
+// [Doc]: [Audio] Record Audio: Prompt the user to record audio.
+action recordAudio(audioQuality ?quality: 'WFRecordingCompression' = "Normal", audioStart ?start: 'WFRecordingStart' = "On Tap")
+
+// [Doc]: [Audio] Encode Audio: Encode audio to a different format and/or speed.
+action 'encodemedia' encodeAudio(
+    variable audio: 'WFMedia',
+    audioFormats ?format: 'WFMediaAudioFormat' = "M4A",
+    audioSpeeds ?speed: 'WFMediaCustomSpeed' = "Normal"
+) {
+	"WFMediaAudioOnly": true
+}
+
+// [Doc]: [Audio] Play Audio: Play a sound.
+action playSound(variable input: 'WFInput')
+
+// [Doc]: [Shazam] Start Shazam: Prompt the user to play music for Shazam to recognize. Returns Shazam result.
+action 'shazamMedia' startShazam(bool ?show: 'WFShazamMediaActionShowWhenRun' = true, bool ?showError: 'WFShazamMediaActionErrorIfNotRecognized' = true)
+
+enum shazamDetail {
+	'Apple Music ID',
+	'Artist',
+	'Title',
+	'Is Explicit',
+	'Lyrics Snippet',
+	'Lyric Snippet Synced',
+	'Artwork',
+	'Video URL',
+	'Shazam URL',
+	'Apple Music URL',
+	'Name',
+}
+
+// [Doc]: [Shazam] Get Shazam Detail: Get a detail about a Shazam result.
+action 'properties.shazam' getShazamDetail(variable input: 'WFInput', shazamDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: [Camera] Take Photo: Prompt the user to take one or more photos.
+action takePhoto(number count: 'WFPhotoCount' = 1, bool showPreview: 'WFCameraCaptureShowPreview' = true)
+
+enum cameraOrientation {
+	'Front',
+	'Back',
+}
+
+enum videoQuality {
+	'Low',
+	'Medium',
+	'High',
+}
+
+enum recordingStart {
+	'On Tap',
+	'Immediately',
+}
+
+// [Doc]: [Camera] Take Photo: Prompt the user to start recording a video.
+action takeVideo(
+    cameraOrientation ?camera: 'WFCameraCaptureDevice' = "Front",
+    videoQuality ?quality: 'WFCameraCaptureQuality' = "High",
+    recordingStart ?recordingStart: 'WFRecordingStart' = "Immediately"
+)
+
+// [Doc]: Take Screenshot
+action takeScreenshot(bool ?mainMonitorOnly: 'WFTakeScreenshotMainMonitorOnly' = false) {
+	"WFTakeScreenshotScreenshotType": "Full Screen"
+}
+// [Doc]: [Podcasts] Search Podcasts
+action searchPodcasts(text query: 'WFSearchTerm')
+
+enum podcastDetail {
+	'Feed URL',
+	'Genre',
+	'Episode Count',
+	'Artist',
+	'Store ID',
+	'Store URL',
+	'Artwork',
+	'Artwork URL',
+	'Name',
+}
+
+// [Doc]: [Podcasts] Get Podcast Detail
+action 'properties.podcastshow' getPodcastDetail(variable podcast: 'WFInput', podcastDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: [Podcasts] Get Podcasts: Get users podcasts.
+action 'getpodcastsfromlibrary' getPodcasts()
+
+// [Doc]: [Podcasts] Play Podcast
+action playPodcast(variable podcast: 'WFPodcastShow')
+
+
+// [Doc]: [Metadata] Strip Media Metadata
+action 'encodemedia' stripMediaMetadata(variable media: 'WFMedia') {
+	"Metadata": true
+}
+
+// [Doc]: [Metadata] Set Media Metadata
+action 'encodemedia' setMetadata(
+    variable media: 'WFMedia',
+    variable ?artwork: 'WFMetadataArtwork',
+    text ?title: 'WFMetadataTitle',
+    text ?artist: 'WFMetadataArtist',
+    text ?album: 'WFMetadataAlbum',
+    text ?genre: 'WFMetadataGenre',
+    text ?year: 'WFMetadataYear'
+) {
+	"Metadata": true
+}
+
+enum encodeVideoSizes {
+	'640×480',
+	'960×540',
+	'1280×720',
+	'1920×1080',
+	'3840×2160',
+	'HEVC 1920×1080',
+	'HEVC 3840x2160',
+	'ProRes 422',
+}
+
+enum encodeVideoSpeeds {
+	'0.5X',
+	'Normal',
+	'2X',
+}
+
+// [Doc]: [Video Editing] Encode Video: Encode a video to a different format, size and/or speed.
+action 'encodemedia' encodeVideo(variable video: 'WFMedia', encodeVideoSizes ?size: 'WFMediaSize' = "Passthrough", encodeVideoSpeeds ?speed: 'WFMediaCustomSpeed' = "Normal", bool ?preserveTransparency: 'WFMediaPreserveTransparency' = false)
+
+// [Doc]: [Video Editing] Trim Video: Prompts the user to trim the video.
+action trimVideo(variable video: 'WFInputMedia')
+
+// [Doc]: [Voice Memos] Search Voice Memos
+action 'com.apple.VoiceMemos.SearchRecordings' searchVoiceMemos(text search: 'searchPhrase'): array

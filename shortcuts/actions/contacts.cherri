@@ -1,0 +1,86 @@
+/*
+Contacts Actions
+*/
+
+enum contactDetail {
+ 'First Name',
+ 'Middle Name',
+ 'Last Name',
+ 'Birthday',
+ 'Prefix',
+ 'Suffix',
+ 'Nickname',
+ 'Phonetic First Name',
+ 'Phonetic Last Name',
+ 'Phonetic Middle Name',
+ 'Company',
+ 'Job Title',
+ 'Department',
+ 'File Extension',
+ 'Creation Date',
+ 'File Path',
+ 'Last Modified Date',
+ 'Name',
+ 'Random',
+}
+
+// [Doc]: Get Contacts: Get contacts from input.
+action 'detect.contacts' getContacts(variable input: 'WFInput'): array
+
+// [Doc]: Filter Contacts
+action 'filter.contacts' filterContacts(
+    variable contacts: 'WFContentItemInputParameter',
+    contactDetail ?sortBy: 'WFContentItemSortProperty',
+    abcSortOrder ?sortOrder: 'WFContentItemSortOrder' = "A to Z",
+    number ?limit: 'WFContentItemLimitNumber'
+)
+
+// [Doc]: Get Detail of Contact: Get a detail about a contact.
+action 'properties.contacts' getContactDetail(variable contact: 'WFInput', contactDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: Select Contact: Prompt the user to select a contact or multiple contacts. Returns selected contact.
+action 'selectcontacts' selectContact(bool ?multiple: 'WFSelectMultiple' = false)
+
+// [Doc]: [Phone] Call: Call a contact.
+action 'com.apple.mobilephone.call' call(variable contact: 'WFCallContact')
+
+enum facetimeCallType {
+ 'Video',
+ 'Audio',
+}
+
+// [Doc]: [Phone] FaceTime Call: Starts a FaceTime audio or video call with the contact.
+action 'com.apple.facetime.facetime' facetimeCall(variable contact: 'WFFaceTimeContact', facetimeCallType ?type: 'WFFaceTimeType' = "Video") {
+	"WFFaceTimeType": "Video"
+}
+
+// [Doc]: [Phone] Get Phone Numbers: Get phone numbers from input.
+action 'detect.phonenumber' getPhoneNumbers(text input: 'WFInput'): array
+
+// [Doc]: [Phone] Select Phone Number: Prompt the user to select a phone number from their contacts.
+action 'selectphone' selectPhoneNumber()
+
+// [Doc]: [Email] Get Emails: Get emails from input.
+action 'detect.emailaddress' getEmails(text input: 'WFInput'): array
+
+// [Doc]: [Email] Select Email Address: Prompt the user to select an email address from their contacts.
+action 'selectemail' selectEmailAddress()
+
+// [Doc]: Remove Contact Detail: Remove a detail from a contact.
+action 'setters.contacts' removeContactDetail(variable contact: 'WFInput', contactDetail detail: 'WFContentItemPropertyName') {
+    "Mode": "Remove"
+}
+
+// [Doc]: Add New Contact: Create a new contact.
+action internal 'addnewcontact' newContact(text firstName: 'WFContactFirstName', text lastName: 'WFContactLastName', text phoneNumber, text emailAddress, text company: 'WFContactCompany', text notes: 'WFContactNotes', bool ?prompt: 'ShowWhenRun' = false)
+
+// [Doc]: Update Contact
+action default internal 'setters.contacts' updateContact(variable contact: 'WFInput', contactDetail detail: 'WFContentItemPropertyName', text value) {
+    "Mode": "Set"
+}
+
+// [Doc]: [Email] Email Address: Create an email address value.
+action internal 'email' emailAddress(text ...email)
+
+// [Doc]: [Phone] Phone Number: Create a phone number value.
+action internal phoneNumber(text ...number)

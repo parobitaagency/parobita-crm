@@ -1,0 +1,106 @@
+/*
+Music Actions
+*/
+
+// [Doc]: Get Current Song: Gets the currently playing song.
+action getCurrentSong()
+
+// [Doc]: Add to Music: Add music to library.
+action 'addtoplaylist' addToMusic(variable songs: 'WFInput')
+
+// [Doc]: Select Music: Prompt the user to select music.
+action 'exportsong' selectMusic(bool ?selectMultiple: 'WFExportSongActionSelectMultiple' = false)
+
+enum shuffleMode {
+	'Off',
+	'Songs',
+}
+
+enum repeatMode {
+	'None',
+	'One',
+	'All',
+}
+
+// [Doc]: Play Music: Set music to play with modes for shuffle and repeat.
+action playMusic(&variable music: 'WFMediaItems', shuffleMode ?shuffle: 'WFPlayMusicActionShuffle', repeatMode ?repeat: 'WFPlayMusicActionRepeat')
+
+enum musicDetail {
+	'Title',
+	'Album',
+	'Artist',
+	'Album Artist',
+	'Genre',
+	'Composer',
+	'Date Added',
+	'Media Kind',
+	'Duration',
+	'Play Count',
+	'Track Number',
+	'Disc Number',
+	'Album Artwork',
+	'Is Explicit',
+	'Lyrics',
+	'Release Date',
+	'Comments',
+	'Is Cloud Item',
+	'Skip Count',
+	'Last Played Date',
+	'Rating',
+	'File Path',
+	'Name',
+}
+
+// [Doc]: Get Music Detail: Get a detail about a song.
+action 'properties.music' getMusicDetail(variable music: 'WFInput', musicDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: [Playback] Play: Press play.
+action 'pausemusic' play() {
+	"WFPlayPauseBehavior": "Play"
+}
+
+// [Doc]: [Playback] Pause: Press pause.
+action 'pausemusic' pause() {
+	"WFPlayPauseBehavior": "Pause"
+}
+
+// [Doc]: [Playback] Toggle Play/Pause
+action 'pausemusic' togglePlayPause() {
+	"WFPlayPauseBehavior": "Play/Pause"
+}
+
+// [Doc]: [Playback] Skip Back: Go to the previous song.
+action skipBack() {
+	"WFSkipBackBehavior": "Previous Song"
+}
+
+// [Doc]: [Playback] Skip Forward: Go to the next song.
+action 'skipforward' skipFwd()
+
+enum seekBehavior {
+    'To Time',
+    'Forward By',
+    'Backward By',
+}
+
+// [Doc]: [Playback] Seek: Seek the currently playing media.
+action seek(#timeDuration timeInterval: 'WFTimeInterval' = qty(0, "sec"), seekBehavior behavior: 'WFSeekBehavior' = "To Time")
+
+// [Doc]: [Playback] Play Next: Add music to play next in the queue.
+action 'addmusictoupnext' playNext(variable music: 'WFMusic') {
+	"WFWhenToPlay": "Next"
+}
+
+// [Doc]: [Playback] Play Next: Add music to the end of the queue.
+action 'addmusictoupnext' playLater(variable music: 'WFMusic') {
+	"WFWhenToPlay": "Later"
+}
+
+// [Doc]: [Playback] Clear Up Next: Clear the queue.
+action clearUpNext()
+
+// [Doc]: [Playlists] Add to Playlist
+action addToPlaylist(text playlistName: 'WFPlaylistName', variable songs: 'WFInput')
+
+// [Doc]: [Playlists] Get Playlist: Gets songs from a playlist
+action 'get.playlist' getPlaylistSongs(variable playlistName: 'WFPlaylistName'): array

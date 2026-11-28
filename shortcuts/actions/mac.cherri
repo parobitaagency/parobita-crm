@@ -1,0 +1,91 @@
+/*
+macOS-only actions
+*/
+
+// [Doc]: Get Apps: Get list of applications.
+action mac v18 'filter.apps' getApps(): array
+
+// [Doc]: Make Disk Image: Create a new disk image.
+action mac v15 makeDiskImage(text name: 'VolumeName', variable contents: 'WFInput', bool ?encrypt: 'EncryptImage' = false) {
+	"SizeToFit": true
+}
+
+enum storageUnit {
+    'bytes',
+    'KB',
+    'MB',
+    'GB',
+    'TB',
+    'PB',
+    'EB',
+    'ZB',
+    'Y'
+}
+
+// [Doc]: Make Sized Disk Image: Create a new disk image of a specific size.
+action mac v15 'makediskimage' makeSizedDiskImage(text name: 'VolumeName', variable contents: 'WFInput', #storageUnit diskSize: 'ImageSize' = qty(1, "GB"), bool ?encrypt: 'EncryptImage' = false) {
+    "SizeToFit": false
+}
+
+// [Doc]: [Device] Start Screensaver
+action mac startScreensaver()
+
+// [Doc]: [Device] Sleep: Puts the Mac to sleep.
+action mac v17 sleep()
+
+// [Doc]: [Device] Display Sleep: Only puts the Mac display to sleep, device remains awake.
+action mac v17 displaySleep()
+
+enum screenshotSelection {
+	'Window',
+	'Custom',
+}
+
+// [Doc]: Take Interactive Screenshot
+action mac 'takescreenshot' takeInteractiveScreenshot(screenshotSelection ?selection: 'WFTakeScreenshotActionInteractiveSelectionType' = "Window") {
+	"WFTakeScreenshotScreenshotType": "Interactive"
+}
+
+enum windowPosition {
+	'Top Left',
+	'Top Center',
+	'Top Right',
+	'Middle Left',
+	'Center',
+	'Middle Right',
+	'Bottom Left',
+	'Bottom Center',
+	'Bottom Right',
+	'Coordinates',
+}
+
+// [Doc]: [Windows] Move Window: Move a window to a defined position.
+action mac moveWindow(variable window: 'WFWindow', windowPosition position: 'WFPosition', bool ?bringToFront: 'WFBringToFront' = true)
+
+enum windowSize {
+ 'Fit Screen',
+ 'Top Half',
+ 'Bottom Half',
+ 'Left Half',
+ 'Right Half',
+ 'Top Left Quarter',
+ 'Top Right Quarter',
+ 'Bottom Left Quarter',
+ 'Bottom Right Quarter',
+ 'Dimensions',
+}
+
+// [Doc]: [Windows] Resize Window: Resize a window to defined size.
+action mac resizeWindow(variable window: 'WFWindow', windowSize configuration: 'WFConfiguration')
+
+// [Doc]: [Scripts] Run Shell Script
+action mac runShellScript(text script: 'Script', variable ?input: 'Input', text ?shell: 'Shell' = "/bin/zsh", text ?inputMode: 'InputMode' = "to stdin")
+
+// [Doc]: [Scripts] Run Apple Script
+action mac runAppleScript(rawtext script: 'Script', variable ?input: 'Input')
+
+// [Doc]: [Scripts] Run JavaScript for Automation
+action mac 'runjavascriptforautomation' runJSAutomation(text script: 'Script', variable ?input: 'Input')
+
+// [Doc]: [Windows] Get Windows
+action internal mac 'filter.windows' getWindows(windowSorting ?sortBy: 'WFContentItemSortProperty', sortOrder ?orderBy: 'WFContentItemSortOrder', number ?limit: 'WFContentItemLimitNumber')

@@ -1,0 +1,19 @@
+#include 'actions/web'
+
+#define name Maraton Kontrol
+#define color red
+#define glyph lock
+
+const base = "https://lzxkowlecpiwvbwrjqxs.supabase.co/rest/v1/rpc"
+const key = "sb_publishable_-cMxpW6ET4taE0in1oE7iw_sDDVtR4m"
+const tok = "__SHORTCUT_TOKEN__"
+
+@left: number
+
+const stRes = jsonRequest("{base}/sc_status", "POST", {"t": "{tok}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+@st = getDictionary(stRes)
+@leftTxt = "{@st['left']}"
+    @left = @leftTxt.number
+if @left > 0 {
+    run("Parobita Ara", @st)
+}

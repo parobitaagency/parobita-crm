@@ -1,0 +1,118 @@
+/*
+Apple Intelligence actions.
+*/
+
+app ImagePlayground:'Image Playground' 'com.apple.GenerativePlaygroundApp' {
+    'GenerateImageIntent'
+}
+
+enum generativeResultType {
+    'Text',
+    'Number',
+    'Date',
+    'Boolean',
+    'List',
+    'Dictionary',
+}
+
+enum Model {
+    'Apple Intelligence'
+    'Apple Intelligence Pro'
+    'Apple Intelligence on Device',
+    'ChatGPT',
+}
+
+// [Doc]: [Language Models] Ask Cloud Model: Ask a Private Cloud AI model using a prompt. Follow up will open a follow-up prompt to the model. Allow search uses Broad World Knowledge, allowing the model to search the web for up-to-date information.
+action v27 'askllm' askModel(
+    text prompt: 'WFLLMPrompt',
+    bool ?followUp: 'FollowUp' = false,
+    bool ?allowSearch: 'WFAllowWebSearch' = false,
+    generativeResultType ?resultType: 'WFGenerativeResultType' = "Automatic",
+) {
+    "WFLLMModel": "Apple Intelligence"
+}
+
+// [Doc]: [Language Models] Ask Cloud Pro Model: Ask a Private Cloud Pro AI model with increased reasoning using a prompt. May require subscription. Follow up will open a follow-up prompt to the model. Allow search uses Broad World Knowledge, allowing the model to search the web for up-to-date information.
+action v27 'askllm' askProModel(
+    text prompt: 'WFLLMPrompt',
+    bool ?followUp: 'FollowUp' = false,
+    bool ?allowSearch: 'WFAllowWebSearch' = false,
+    generativeResultType ?resultType: 'WFGenerativeResultType' = "Automatic",
+) {
+    "WFLLMModel": "Apple Intelligence Pro"
+}
+
+// [Doc]: [Language Models] Ask On-Device Model: Ask an On-Device LLM using a prompt. Follow up will open a follow-up prompt to the model.
+action v26 'askllm' askDeviceModel(
+    text prompt: 'WFLLMPrompt',
+    bool ?followUp: 'FollowUp' = false,
+    generativeResultType ?resultType: 'WFGenerativeResultType' = "Automatic"
+) {
+    "WFLLMModel": "Apple Intelligence on Device"
+}
+
+// [Doc]: [Language Models] Ask Chat GPT: Ask Chat GPT using a prompt. Follow up will open a follow-up prompt to the model.
+action v26 'askllm' askChatGPT(
+    text prompt: 'WFLLMPrompt',
+    bool ?followUp: 'FollowUp' = false,
+    generativeResultType ?resultType: 'WFGenerativeResultType' = "Automatic"
+) {
+    "WFLLMModel": "ChatGPT"
+}
+
+// Deprecated: iOS 27 changed the name of Cloud models.
+
+enum LLMModel {
+    'Private Cloud Compute'
+    'Apple Intelligence on Device',
+    'ChatGPT',
+}
+
+// [Doc]: [Language Models] Ask Private Cloud Compute LLM: Ask a private cloud compute LLM using a prompt. Follow up will open a follow-up prompt to the model.
+action v26 v26< 'askllm' askCloudLLM(
+    text prompt: 'WFLLMPrompt',
+    bool ?followUp: 'FollowUp' = false,
+    generativeResultType ?resultType: 'WFGenerativeResultType' = "Automatic"
+) {
+    "WFLLMModel": "Private Cloud Compute"
+}
+
+// [Doc]: [Language Models] Ask LLM: Ask a Cloud AI model using a prompt. Follow up will open a follow-up prompt to the model.
+action v26 v26< askLLM(
+    text prompt: 'WFLLMPrompt',
+    LLMModel ?model: 'WFLLMModel' = "Private Cloud Compute",
+    bool ?followUp: 'FollowUp' = false,
+    generativeResultType ?resultType: 'WFGenerativeResultType' = "Automatic"
+)
+
+enum textTone {
+    'friendly',
+    'professional',
+    'concise',
+}
+
+// [Doc]: [Writing Tools] Adjust Text Tone: Adjust the tone of the text using Apple Intelligence Writing Tools.
+action 'com.apple.WritingTools.WritingToolsAppIntentsExtension.AdjustToneIntent' adjustTextTone(text text: 'text', textTone tone): text
+
+// [Doc]: [Writing Tools] Make List From Text: Generate list from text  using Apple Intelligence Writing Tools.
+action 'com.apple.WritingTools.WritingToolsAppIntentsExtension.FormatListIntent' generateList(text text: 'text'): text
+
+// [Doc]: [Writing Tools] Make Table From Text: Generate table from text using Apple Intelligence Writing Tools.
+action 'com.apple.WritingTools.WritingToolsAppIntentsExtension.FormatTableIntent' generateTable(text text: 'text'): text
+
+// [Doc]: [Writing Tools] Proofread Text: Generate a proofread version of text using Apple Intelligence Writing Tools.
+action 'com.apple.WritingTools.WritingToolsAppIntentsExtension.ProofreadIntent' generateProofread(text text: 'text'): text
+
+// [Doc]: [Writing Tools] Rewrite Text: Generate a rewritten version of text using Apple Intelligence Writing Tools.
+action 'com.apple.WritingTools.WritingToolsAppIntentsExtension.RewriteTextIntent' generateRewrite(text text: 'text'): text
+
+// [Doc]: [Writing Tools] Summarize Text: Generate a summarized version of text using Apple Intelligence Writing Tools.
+action 'com.apple.WritingTools.WritingToolsAppIntentsExtension.SummarizeTextIntent' generateSummary(text text: 'text'): text
+
+// [Doc]: [Writing Tools] Summarize Text Key Points: Generate a summary of key points of text using Apple Intelligence Writing Tools.
+action 'com.apple.WritingTools.WritingToolsAppIntentsExtension.SummarizeTextIntent' generateKeyPoints(text text: 'text'): text {
+    "summaryType": "createKeyPoints"
+}
+
+// [Doc]: [Image Playground] Create Image using Image Playground: Generate an Image with a prompt using the Image Playground app.
+action internal #ImagePlayground.GenerateImageIntent generateImage(text prompt: 'prompt', variable ?image: 'image', imagePlaygroundStyle ?style = "animation", saveToPlaygroundBehavior ?saveToPlayground: 'saveToPlayground' = "always")

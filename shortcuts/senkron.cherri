@@ -1,0 +1,30 @@
+#include 'actions/web'
+#include 'actions/network'
+#include 'actions/documents'
+
+#define name Parobita Senkron
+#define color blue
+#define glyph syncArrows
+
+const base = "https://lzxkowlecpiwvbwrjqxs.supabase.co/rest/v1/rpc"
+const key = "sb_publishable_-cMxpW6ET4taE0in1oE7iw_sDDVtR4m"
+const tok = "__SHORTCUT_TOKEN__"
+
+@ipRaw = isOnline()
+@wifi = "{@ipRaw}"
+if @wifi == "" {
+    stop()
+}
+createFolder("Parobita")
+@pendingFile = getFile("Parobita/sonuclar.txt", nil, false)
+@pending = "{@pendingFile}"
+const res = jsonRequest("{base}/sc_sync", "POST", {"t": "{tok}", "results": "{@pending}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+@d = getDictionary(res)
+@txt = "{@d['leads_txt']}"
+@hdr = "{@d['header']}"
+saveFile("Parobita/liste.txt", @txt, true)
+saveFile("Parobita/baslik.txt", @hdr, true)
+@zero = "0"
+saveFile("Parobita/sira.txt", @zero, true)
+@empty = " "
+saveFile("Parobita/sonuclar.txt", @empty, true)

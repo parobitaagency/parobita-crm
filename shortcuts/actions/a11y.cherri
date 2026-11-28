@@ -1,0 +1,126 @@
+/*
+Accessibility Actions
+*/
+
+app Magnifier 'com.apple.Magnifier' {
+    'DescribeThisIntent',
+    'PointAndSpeakIntent',
+    'ReaderModeIntent'
+}
+
+enum backgroundSound {
+	'BalancedNoise',
+	'BrightNoise',
+	'DarkNoise',
+    'Ocean',
+    'Rain',
+    'Stream',
+    'Babble',
+    'Steam',
+    'Airplane',
+    'Boat',
+    'Bus',
+    'Train',
+    'RainOnRoof',
+    'QuietNight',
+    'Fire',
+    'Night',
+}
+
+// [Doc]: Set Background Sound: Set the background sound that plays.
+action 'com.apple.UniversalAccess.UASettingsShortcuts.UASetBackgroundSoundIntent' setBackgroundSound(backgroundSound ?sound: 'backgroundSound' = "BalancedNoise")
+
+// [Doc]: Set Background Sound Volume
+action 'com.apple.UniversalAccess.UASettingsShortcuts.UASetBackgroundSoundsVolumeIntent' setBackgroundSoundsVolume(number volume: 'volumeValue')
+
+enum textSizes {
+	'Accessibility Extra Extra Extra Large',
+	'Accessibility Extra Extra Large',
+	'Accessibility Extra Large',
+	'Accessibility Large',
+	'Accessibility Medium',
+	'Extra Extra Extra Large',
+	'Extra Extra Large',
+	'Extra Large',
+	'Default',
+	'Medium',
+	'Small',
+	'Extra Small',
+}
+
+// [Doc]: [Vision] Set Text Size: Sets the system text size.
+action 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXSetLargeTextIntent' setTextSize(textSizes size: 'textSize')
+
+enum soundRecognitionOperations {
+	'pause',
+	'activate',
+	'toggle',
+}
+
+// [Doc]: [Hearing] Set Sound Recognition
+action !mac v18 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleSoundDetectionIntent' setSoundRecognition(soundRecognitionOperations ?operation = "activate")
+
+// [Doc]: [Magnifier] Describe This
+action !mac v18 #Magnifier.DescribeThisIntent magnifierDescribe()
+
+// [Doc]: [Magnifier] Open Reader
+action !mac v18 #Magnifier.ReaderModeIntent magnifierReader()
+
+// [Doc]: [Magnifier] Start Point & Speak
+action !mac v18 #Magnifier.PointAndSpeakIntent magnifierPointAndSpeak()
+
+// [Doc]: [Hearing] Background Sounds
+action toggleSet 'com.apple.UniversalAccess.AXSettingsShortcuts.AXToggleBackgroundSoundsIntent' BackgroundSounds
+
+// [Doc]: [Hearing] Media Background Sounds
+action toggleSet 'com.apple.UniversalAccess.AXSettingsShortcuts.AXToggleBackgroundSoundsIntent' MediaBackgroundSounds {
+    "setting": "whenMediaIsPlaying"
+}
+
+// [Doc]: Auto Answer Calls
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleAutoAnswerCallsIntent' AutoAnswerCalls
+
+// [Doc]: [Vision] Classic Invert
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleClassicInvertIntent' ClassicInvert
+
+// [Doc]: [Hearing] Closed Captions SDH
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleCaptionsIntent' ClosedCaptionsSDH
+
+// [Doc]: [Vision] Color Filters
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleColorFiltersIntent' ColorFilters
+
+// [Doc]: [Vision] Contrast
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleContrastIntent' Contrast
+
+// [Doc]: [Hearing] LED Flash
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleLEDFlashIntent' LEDFlash
+
+// [Doc]: [Hearing] Left-Right Balance
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXSetLeftRightBalanceIntent' LeftRightBalance(number ?value: 'value')
+
+// [Doc]: [Hearing] Live Captions
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleLiveCaptionsIntent' LiveCaptions
+
+// [Doc]: [Hearing] Mono Audio
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleMonoAudioIntent' MonoAudio
+
+// [Doc]: [Vision] Reduce Motion
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleReduceMotionIntent' ReduceMotion
+
+// [Doc]: [Vision] Reduce Transparency
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleTransparencyIntent' ReduceTransparency
+
+// [Doc]: [Vision] Smart Invert
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleSmartInvertIntent' SmartInvert
+
+// [Doc]: Switch Control
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleSwitchControlIntent' SwitchControl
+
+// [Doc]: [Vision] Voice Control
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleVoiceControlIntent' VoiceControl
+
+// [Doc]: [Vision] White Point
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleWhitePointIntent' WhitePoint
+
+// [Doc]: [Vision] Zoom
+action toggleSet 'com.apple.AccessibilityUtilities.AXSettingsShortcuts.AXToggleZoomIntent' Zoom

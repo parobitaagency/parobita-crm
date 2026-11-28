@@ -1,0 +1,194 @@
+/*
+Device Actions
+*/
+
+app ShortcutsActions 'com.apple.ShortcutsActions' {
+    'GetOrientationAction',
+    'ShowControlCenterAction'
+}
+
+enum deviceDetail {
+	'Device Name',
+	'Device Hostname',
+	'Device Model',
+	'Device Is Watch',
+	'System Version',
+	'Screen Width',
+	'Screen Height',
+	'Current Volume',
+	'Current Brightness',
+	'Current Appearance',
+	'Device Is Locked'
+}
+
+// [Doc]: Get Device Detail: Get a detail about current device.
+action 'getdevicedetails' getDeviceDetail(deviceDetail detail: 'WFDeviceDetail')
+
+// [Doc]: Get Current App: Get the current app.
+action default v26 getCurrentApp()
+
+// [Doc]: Get Current Visible App: Get the current visible apps.
+action v26 'getcurrentapp' getVisibleApps() {
+    "WFVisibleAppScope": "Visible"
+}
+
+// [Doc]: Get On-Screen Content: Get the content currently on-screen.
+action getOnScreenContent()
+
+// [Doc]: Get Selected Text: Get the text currently selected.
+action v27 'getselectedtext' getSelectedText(): text
+
+// [Doc]: [Display] Get Orientation: Get the current orientation of the device.
+action #ShortcutsActions.GetOrientationAction getOrientation(): text
+
+// [Doc]: Lock Screen: Lock the device screen.
+action v17 lockScreen()
+
+// [Doc]: Shut Down: Power off the device.
+action v17 'reboot' shutdown()
+
+// [Doc]: Reboot: Power off the device, then power it on again.
+action v17 reboot() {
+	"WFShutdownMode": "Restart"
+}
+
+// [Doc]: Vibrate Device: Vibrate the device. Only applies to Apple devices with the haptic engine.
+action !mac vibrate()
+
+// [Doc]: Turn On Flashlight: Turn on the flashlight on the device with optional brightness setting.
+action !mac 'flashlight' flashlightOn(float brightness: 'WFFlashlightLevel' = 0.5)
+
+// [Doc]: Turn Off Flashlight: Turn off the flashlight on the device.
+action !mac 'flashlight' flashlightOff() {
+    "state": 0
+}
+
+// [Doc]: Toggle On Flashlight: Toggle the flashlight on the device with optional brightness setting.
+action !mac 'flashlight' toggleFlashlight(float brightness: 'WFFlashlightLevel' = 0.5) {
+    "operation": "toggle"
+}
+
+// [Doc]: Show Control Center: Open the control center on the device.
+action #ShortcutsActions.ShowControlCenterAction showControlCenter()
+
+// [Doc]: [Battery] Low Power Mode
+action toggleSet !mac 'lowpowermode.set' LowPowerMode 'OnValue'
+
+// [Doc]: [Battery] Get Battery Level: Get the current level of charge of the device battery.
+action default getBatteryLevel()
+
+// [Doc]: [Battery] Connected to Charger: Determines if the device is currently connected to a charger.
+action v16.2 'getbatterylevel' connectedToCharger(): bool {
+	"Subject": "Is Connected to Charger"
+}
+
+// [Doc]: [Battery] Is Charging: Determines if the device is currently charging.
+action v16.2 'getbatterylevel' isCharging(): bool {
+	"Subject": "Is Charging"
+}
+
+// [Doc]: [Battery] Charge Limit: Returns the current charge limit of the device battery.
+action v26 'getbatterylevel' getChargeLimit(): number {
+	"Subject": "Charge Limit"
+}
+
+enum deviceUsageType {
+    'all',
+    'app',
+    'website'
+}
+
+enum usageDuration {
+    'today',
+    'yesterday',
+    'lastWeek',
+    'thisWeek',
+    'thisMonth',
+    'thisYear',
+    'specifiedDay',
+    'inBetween',
+}
+
+// [Doc]: [Screen Time] Get Website & App Activity
+action 'com.apple.intelligenceplatform.IntelligencePlatform.IntelligencePlatformDataActionsAppIntentsExtension.CalculateAppUsageIntent' getDeviceUsage(deviceUsageType usageType: 'activityType' = "all", variable ?device: 'selectedDevice', usageDuration during: 'during' = "today", text ?startTime: 'startTime', text ?startTime: 'endTime')
+
+// [Doc]: [Connectivity] Airplane Mode
+action toggleSet 'airplanemode.set' AirplaneMode 'OnValue'
+
+// [Doc]: [Connectivity] Bluetooth
+action toggleSet 'bluetooth.set' Bluetooth 'OnValue'
+
+// [Doc]: [Connectivity] Wifi
+action toggleSet 'wifi.set' Wifi 'OnValue'
+
+// [Doc]: [Connectivity] Cellular Data
+action toggleSet 'cellulardata.set' CellularData 'OnValue'
+
+// [Doc]: [Display] Set Brightness
+action setBrightness(float brightness: 'WFBrightness')
+
+// [Doc]: [Display] Orientation Lock
+action toggleSet !mac 'orientationlock.set' OrientationLock 'OnValue'
+
+// [Doc]: Set Volume
+action setVolume(float volume: 'WFVolume')
+
+// [Doc]: Set Ringtone Volume
+action 'setvolume' setRingtoneVolume(float volume: 'WFVolume') {
+	"WFVolumeSetting": "Ringtone"
+}
+
+// [Doc]: Set Alarm Volume: Set the volume of alarms and timers.
+action !mac v27 'setvolume' setAlarmVolume(float volume: 'WFVolume') {
+	"WFVolumeSetting": "Alarms & Timers"
+}
+
+// [Doc]: Set Alert Volume: Set the volume of alerts and system sounds.
+action !mac v27 'setvolume' setAlertVolume(float volume: 'WFVolume') {
+	"WFVolumeSetting": "Alerts & System Sounds"
+}
+
+// [Doc]: [Personal Hotspot] Personal Hotspot
+action toggleSet !mac 'personalhotspot.set' Hotspot
+
+// [Doc]: [Passwords] Search Passwords: Searches passwords in the Passwords app.
+action 'openpasswords' searchPasswords(text query: 'WFShowPasswordsSearchTerm')
+
+// [Doc]: [System] Dismiss Siri: Dismisses Siri.
+action dismissSiri()
+
+// [Doc]: [System] Return to Home Screen: Returns to the device home screen.
+action !mac returnToHomescreen()
+
+// [Doc]: [Apps] Open App: Open an app.
+action default internal openApp(text appID: 'WFAppIdentifier')
+
+// [Doc]: [Apps] Hide App: Hide an app.
+action default internal 'hide.app' hideApp(text appID)
+
+// [Doc]: [Apps] Quit App: Quit an app.
+action default internal 'quit.app' quitApp(text appID)
+
+// [Doc]: [Apps] Split Apps: Split apps across the screen.
+action internal 'splitscreen' splitApps(text firstAppID, text secondAppID, appSplitRatio ?ratio: 'WFAppRatio' = "half")
+
+// [Doc]: [Apps] Kill App: Kill an app.
+// [Warning]: This will not ask to save changes!
+action internal 'quit.app' killApp(text appID)
+
+// [Doc]: [Apps] Hide Apps: Hide multiple apps. Allows exception.
+action internal 'hide.app' hideAllApps(text ...?except) {
+    "WFHideAppMode": "All Apps"
+}
+
+// [Doc]: [Apps] Quit All Apps: Quits all apps. Allows exceptions.
+action internal 'quit.app' quitAllApps(text ...?except) {
+    "WFQuitAppMode": "All Apps"
+}
+
+// [Doc]: [Apps] Kill All Apps: Kills all apps. Allows exceptions.
+// [Warning]: This will quit all the apps running on the device without asking to save changes!
+action internal 'quit.app' killAllApps(text ...?except) {
+    "WFQuitAppMode": "All Apps",
+    "WFAskToSaveChanges": false
+}

@@ -1,0 +1,412 @@
+#include 'actions/web'
+#include 'actions/contacts'
+#include 'actions/calendar'
+#include 'actions/network'
+#include 'actions/documents'
+#include 'actions/text'
+#include 'actions/device'
+
+#define name Parobita Ara
+#define color green
+#define glyph phone
+
+const base = "https://lzxkowlecpiwvbwrjqxs.supabase.co/rest/v1/rpc"
+const key = "sb_publishable_-cMxpW6ET4taE0in1oE7iw_sDDVtR4m"
+const tok = "__SHORTCUT_TOKEN__"
+
+@left: number
+@target: number
+@mdone: number
+@limit: number
+
+@ipRaw = isOnline()
+@wifiNow = "{@ipRaw}"
+if @wifiNow == "" {
+    @listFile = getFile("Parobita/liste.txt", nil, false)
+    @listTxt = "{@listFile}"
+    if @listTxt == "" {
+        alert("Telefonda kayıtlı liste yok. Bir kere wifi'ye bağlanıp Parobita Senkron'u çalıştır.", "İnternet yok")
+        stop()
+    }
+    @nowH = currentDate()
+    @hourTxt = formatDate(@nowH, "Custom", "H")
+    @hour: number
+    @hour = @hourTxt.number
+    if @hour < 9 {
+        alert("Mesai dışı: 09:00–21:00 arası arama yapılır.", "Arama yok")
+        stop()
+    }
+    if @hour >= 21 {
+        alert("Mesai dışı: 09:00–21:00 arası arama yapılır.", "Arama yok")
+        stop()
+    }
+    @lines = splitText(@listTxt)
+    @total = count(@lines)
+    @idxFile = getFile("Parobita/sira.txt", nil, false)
+    @idxTxt = "{@idxFile}"
+    @idx: number
+    @idx = @idxTxt.number
+    @hdrFile = getFile("Parobita/baslik.txt", nil, false)
+    @offHeader = "{@hdrFile}"
+    @offDone = 0
+    returnToHomescreen()
+    repeat j for 300 {
+        @idx += 1
+        if @idx > @total {
+            alert("Telefondaki liste bitti. Bu seansta {@offDone} arama yaptın. Wifi'ye bağlanınca sonuçlar gönderilir, yeni liste iner.", "Liste bitti")
+            stop()
+        }
+        @line = getListItem(@lines, @idx)
+        @parts = splitText("{@line}", "¦")
+        @oId = getListItem(@parts, 1)
+        @oName = getListItem(@parts, 2)
+        @oPhone = getListItem(@parts, 3)
+        @oInfo = getListItem(@parts, 4)
+        @oNumbers = getPhoneNumbers("{@oPhone}")
+        call(@oNumbers)
+
+        @oOutcome = ""
+        @endAfter = "0"
+        @oWhen = ""
+        @oContact = ""
+        menu "📴 Çevrimdışı · {@oName} · {@oInfo}\n\n{@offHeader}" {
+            item "✅ Toplantı":
+                @oOutcome = "toplanti"
+            item "❌ Red":
+                @oOutcome = "red"
+            item "⏸️ Açmadı":
+                @oOutcome = "acmadi"
+            item "⚠️ Sonra ara":
+                @oOutcome = "sonra_ara"
+            item "📲 WhatsApp’tan bilgi istedi":
+                @oOutcome = "wp"
+            item "⏳ Uzun vade (ileride)":
+                @oOutcome = "uzun_vade"
+            item "🚫 Yanlış no / kapalı":
+                @oOutcome = "gecersiz"
+            item "⏹ Seansı bitir":
+                @endAfter = "1"
+                menu "Seansı bitirmeden önce: bu son arama nasıl geçti?" {
+                    item "✅ Toplantı":
+                        @oOutcome = "toplanti"
+                    item "❌ Red":
+                        @oOutcome = "red"
+                    item "⏸️ Açmadı":
+                        @oOutcome = "acmadi"
+                    item "⚠️ Sonra ara":
+                        @oOutcome = "sonra_ara"
+                    item "📲 WhatsApp’tan bilgi istedi":
+                        @oOutcome = "wp"
+                    item "⏳ Uzun vade (ileride)":
+                        @oOutcome = "uzun_vade"
+                    item "🚫 Yanlış no / kapalı":
+                        @oOutcome = "gecersiz"
+                }
+        }
+        if @oOutcome == "toplanti" {
+            @oStart = prompt("{@oName} · toplantı günü ve saati", "Date and Time")
+            @oContactRaw = prompt("Yetkilinin adı")
+            @oContact = replaceText("¦", " ", "{@oContactRaw}")
+            @oWhen = formatDate(@oStart, "Custom", "yyyy-MM-dd'T'HH:mm:ssZZZZZ")
+            @oEnd = adjustDate(@oStart, "Add", qty(1, "hr"))
+            rawAction("is.workflow.actions.addnewevent", {
+                "WFCalendarItemTitle": "Toplantı · {@oName}",
+                "WFCalendarItemStartDate": "{@oStart}",
+                "WFCalendarItemEndDate": "{@oEnd}",
+                "WFCalendarItemNotes": "Yetkili: {@oContact} · Tel: {@oPhone}"
+            })
+        }
+        if @oOutcome == "sonra_ara" {
+            menu "{@oName} · ne zaman tekrar arayalım?" {
+                item "1 saat sonra":
+                    @oWhen = "+1h"
+                item "Yarın":
+                    @oWhen = "+1d"
+                item "📅 Tarih ve saat seç":
+                    @oAgain = prompt("{@oName} · ne zaman tekrar aranacak?", "Date and Time")
+                    @oWhen = formatDate(@oAgain, "Custom", "yyyy-MM-dd'T'HH:mm:ssZZZZZ")
+            }
+        }
+        if @oOutcome == "wp" {
+            menu "📲 {@oName} · ne zaman tekrar arayalım?" {
+                item "2 gün sonra":
+                    @oWhen = "+2d"
+                item "1 hafta sonra":
+                    @oWhen = "+1w"
+                item "2 hafta sonra":
+                    @oWhen = "+2w"
+            }
+        }
+        if @oOutcome == "uzun_vade" {
+            menu "⏳ {@oName} · ne zaman tekrar deneyelim?" {
+                item "1 ay sonra":
+                    @oWhen = "+1m"
+                item "3 ay sonra":
+                    @oWhen = "+3m"
+                item "6 ay sonra":
+                    @oWhen = "+6m"
+            }
+        }
+        @now = currentDate()
+        @called = formatDate(@now, "Custom", "yyyy-MM-dd'T'HH:mm:ssZZZZZ")
+        @resultLine = "{@oId}¦{@oOutcome}¦{@oWhen}¦{@oContact}¦{@oId}-{@called}¦{@called}"
+        appendToFile("Parobita/sonuclar.txt", @resultLine)
+        @idxOut = "{@idx}"
+        saveFile("Parobita/sira.txt", @idxOut, true)
+        @offDone += 1
+        if @endAfter == "1" {
+            alert("Bu seansta {@offDone} arama yaptın. Sonuçlar telefonda, wifi'ye bağlanınca gönderilir.", "Seans bitti")
+            stop()
+        }
+    }
+    stop()
+}
+
+createFolder("Parobita")
+@syncFile = getFile("Parobita/sonuclar.txt", nil, false)
+@syncPending = "{@syncFile}"
+@syncTrim = trimWhitespace(@syncPending)
+if @syncTrim != "" {
+    const syncRes = jsonRequest("{base}/sc_sync", "POST", {"t": "{tok}", "results": "{@syncPending}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+    @sd = getDictionary(syncRes)
+    @sTxt = "{@sd['leads_txt']}"
+    @sHdr = "{@sd['header']}"
+    saveFile("Parobita/liste.txt", @sTxt, true)
+    saveFile("Parobita/baslik.txt", @sHdr, true)
+    @sZero = "0"
+    saveFile("Parobita/sira.txt", @sZero, true)
+    @sEmpty = " "
+    saveFile("Parobita/sonuclar.txt", @sEmpty, true)
+}
+
+const stRes = jsonRequest("{base}/sc_status", "POST", {"t": "{tok}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+@st = getDictionary(stRes)
+@leftTxt = "{@st['left']}"
+    @left = @leftTxt.number
+@targetTxt = "{@st['target']}"
+    @target = @targetTxt.number
+@mdoneTxt = "{@st['done']}"
+    @mdone = @mdoneTxt.number
+returnToHomescreen()
+@mode = "normal"
+@limit = 300
+
+if @left > 0 {
+    @mode = "maraton"
+    @limit = @left
+} else {
+    menu "Nasıl arıyoruz?" {
+        item "📞 Normal seans":
+            @mode = "normal"
+        item "🏃 Maraton (durdurulamaz)":
+            @mode = "maraton"
+    }
+    if @mode == "maraton" {
+        @want = 20
+        menu "Maratonda kaç arama?" {
+            item "20":
+                @want = 20
+            item "30":
+                @want = 30
+            item "40":
+                @want = 40
+            item "50":
+                @want = 50
+            item "Başka (en az 20)":
+                @want = prompt("Kaç arama? (en az 20)", "Number")
+                if @want < 20 {
+                    @want = 20
+                }
+        }
+        menu "Emin misin? {@want} arama bitmeden durmak yok. Kapatsan bile kaldığın yerden devam edecek." {
+            item "Eminim":
+                @ok = "1"
+            item "Vazgeç":
+                stop()
+        }
+        @quotes = list("Noldu, para kazanmaya ihtiyacın olduğu mu aklına geldi? Hadi bakalım.", "Yapamazsın ki. Götün yemez. Kanıtla bakalım.", "Sen tembelsin. {@want} arama sonra konuşuruz.", "Dün de yarın demiştin. Bugün o yarın.", "1 milyon TL kendiliğinden gelmiyor. Telefonu eline al.", "Retten korkan satış yapamaz. Korkuyor musun?", "Bahaneni söyle, ben de dinlemeyeyim.", "Rakiplerin şu an arıyor. Sen ne yapıyorsun?", "Her ret seni bir satışa yaklaştırıyor. Say bakalım.", "Konfor alanın seni zengin etmeyecek.", "Başlayıp yarıda bırakacaksan hiç başlama. Ama başla.", "Herkes plan yapar, az kişi arar. Hangisisin?")
+        @quote = getRandomItem(@quotes)
+        menu "{@quote}" {
+            item "Başla. Bahane yok.":
+                @ok = "2"
+            item "Vazgeç (tembel)":
+                stop()
+        }
+        const msRes = jsonRequest("{base}/sc_marathon_start", "POST", {"t": "{tok}", "target": "{@want}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+        @ms = getDictionary(msRes)
+        @limitTxt = "{@ms['left']}"
+    @limit = @limitTxt.number
+        @targetTxt = "{@ms['target']}"
+    @target = @targetTxt.number
+        @mdoneTxt = "{@ms['done']}"
+    @mdone = @mdoneTxt.number
+    }
+}
+
+@done = 0
+repeat i for @limit {
+    const next = jsonRequest("{base}/sc_next", "POST", {"t": "{tok}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+    @lead = getDictionary(next)
+    @name = "{@lead['name']}"
+    @phone = "{@lead['phone']}"
+    @leadId = "{@lead['id']}"
+    @info = "{@lead['info']}"
+    @header = "{@lead['header']}"
+    @pending = "{@lead['pending']}"
+    if @phone == "" {
+        if @mode == "maraton" {
+            const endRes = jsonRequest("{base}/sc_marathon_end_empty", "POST", {"t": "{tok}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+        }
+        alert("{@name}. Bu seansta {@done} arama yaptın.", "Arama yok")
+        stop()
+    }
+    @prefix = ""
+    @outcome = ""
+    @when = ""
+    @contact = ""
+    @redial = "0"
+    @endAfter = "0"
+    @numbers = getPhoneNumbers(@phone)
+    if @pending == "1" {
+        menu "⚠️ Sonucu girilmedi: {@name}\n\nKonuştuysan sonucu seç. Konuşmadıysan tekrar ara." {
+            item "🔁 Tekrar ara":
+                @redial = "1"
+            item "✅ Toplantı":
+                @outcome = "toplanti"
+            item "❌ Red":
+                @outcome = "red"
+            item "⏸️ Açmadı":
+                @outcome = "acmadi"
+            item "⚠️ Sonra ara":
+                @outcome = "sonra_ara"
+            item "📲 WhatsApp’tan bilgi istedi":
+                @outcome = "wp"
+            item "⏳ Uzun vade (ileride)":
+                @outcome = "uzun_vade"
+            item "🚫 Yanlış no / kapalı":
+                @outcome = "gecersiz"
+        }
+        if @redial == "1" {
+            call(@numbers)
+        }
+    } else {
+        call(@numbers)
+    }
+
+    if @outcome == "" {
+    if @mode == "maraton" {
+        @shown = @mdone + 1
+        menu "{@prefix}🏃 {@shown}/{@target} · {@name}\n\n{@header}" {
+            item "✅ Toplantı":
+                @outcome = "toplanti"
+            item "❌ Red":
+                @outcome = "red"
+            item "⏸️ Açmadı":
+                @outcome = "acmadi"
+            item "⚠️ Sonra ara":
+                @outcome = "sonra_ara"
+            item "📲 WhatsApp’tan bilgi istedi":
+                @outcome = "wp"
+            item "⏳ Uzun vade (ileride)":
+                @outcome = "uzun_vade"
+            item "🚫 Yanlış no / kapalı":
+                @outcome = "gecersiz"
+        }
+    } else {
+        menu "{@prefix}{@name} · {@info}\n\n{@header}" {
+            item "✅ Toplantı":
+                @outcome = "toplanti"
+            item "❌ Red":
+                @outcome = "red"
+            item "⏸️ Açmadı":
+                @outcome = "acmadi"
+            item "⚠️ Sonra ara":
+                @outcome = "sonra_ara"
+            item "📲 WhatsApp’tan bilgi istedi":
+                @outcome = "wp"
+            item "⏳ Uzun vade (ileride)":
+                @outcome = "uzun_vade"
+            item "🚫 Yanlış no / kapalı":
+                @outcome = "gecersiz"
+            item "⏹ Seansı bitir":
+                @endAfter = "1"
+                menu "Seansı bitirmeden önce: bu son arama nasıl geçti?" {
+                    item "✅ Toplantı":
+                        @outcome = "toplanti"
+                    item "❌ Red":
+                        @outcome = "red"
+                    item "⏸️ Açmadı":
+                        @outcome = "acmadi"
+                    item "⚠️ Sonra ara":
+                        @outcome = "sonra_ara"
+                    item "📲 WhatsApp’tan bilgi istedi":
+                        @outcome = "wp"
+                    item "⏳ Uzun vade (ileride)":
+                        @outcome = "uzun_vade"
+                    item "🚫 Yanlış no / kapalı":
+                        @outcome = "gecersiz"
+                }
+        }
+    }
+    }
+
+    if @outcome == "toplanti" {
+        @start = prompt("{@name} · toplantı günü ve saati", "Date and Time")
+        @contact = prompt("Yetkilinin adı")
+        @when = formatDate(@start, "Custom", "yyyy-MM-dd'T'HH:mm:ssZZZZZ")
+        @end = adjustDate(@start, "Add", qty(1, "hr"))
+        rawAction("is.workflow.actions.addnewevent", {
+            "WFCalendarItemTitle": "Toplantı · {@name}",
+            "WFCalendarItemStartDate": "{@start}",
+            "WFCalendarItemEndDate": "{@end}",
+            "WFCalendarItemNotes": "Yetkili: {@contact} · Tel: {@phone}"
+        })
+    }
+    if @outcome == "sonra_ara" {
+        menu "{@name} · ne zaman tekrar arayalım?" {
+            item "1 saat sonra":
+                @when = "+1h"
+            item "Yarın":
+                @when = "+1d"
+            item "📅 Tarih ve saat seç":
+                @again = prompt("{@name} · ne zaman tekrar aranacak?", "Date and Time")
+                @when = formatDate(@again, "Custom", "yyyy-MM-dd'T'HH:mm:ssZZZZZ")
+        }
+    }
+    if @outcome == "wp" {
+        menu "📲 {@name} · mesajdan sonra ne zaman tekrar arayalım? (Mesajı CRM'den tek tuşla atacaksın)" {
+            item "2 gün sonra":
+                @when = "+2d"
+            item "1 hafta sonra":
+                @when = "+1w"
+            item "2 hafta sonra":
+                @when = "+2w"
+        }
+    }
+    if @outcome == "uzun_vade" {
+        menu "⏳ {@name} · ne zaman tekrar deneyelim?" {
+            item "1 ay sonra":
+                @when = "+1m"
+            item "3 ay sonra":
+                @when = "+3m"
+            item "6 ay sonra":
+                @when = "+6m"
+        }
+    }
+
+    const saved = jsonRequest("{base}/sc_result", "POST", {"t": "{tok}", "lead": "{@leadId}", "outcome": "{@outcome}", "at_time": "{@when}", "contact": "{@contact}"}, {"apikey": "{key}", "Content-Type": "application/json"})
+    @res = getDictionary(saved)
+    @done += 1
+    if @endAfter == "1" {
+        alert("Bu seansta {@done} arama yaptın.", "Seans bitti")
+        stop()
+    }
+    if @mode == "maraton" {
+        @mdoneTxt = "{@res['marathon_done']}"
+    @mdone = @mdoneTxt.number
+        if @mdone >= @target {
+            alert("{@target} arama bitti. Bahane yoktu, yaptın.", "🏁 Maraton tamam")
+            stop()
+        }
+    }
+}

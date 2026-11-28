@@ -1,0 +1,330 @@
+/*
+Calendar Actions
+*/
+
+app Clock 'com.apple.clock' {
+    'CreateAlarmIntent',
+    'DeleteAlarmIntent',
+    'ToggleAlarmIntent',
+    'AlarmEntity',
+    'OpenAlarmIntent',
+    'PauseTimerIntent',
+    'ResumeTimerIntent',
+    'CancelTimerIntent',
+    'StartStopwatchIntent',
+    'StopStopwatchIntent',
+    'LapStopwatchIntent',
+    'ResetStopwatchIntent',
+    'AddWorldClockIntent',
+    'RemoveWorldClockIntent',
+    'GetTimeForCityIntent',
+    'OpenTab'
+}
+
+// These intents are stored under the identifier of the iOS Clock app, which differs from the macOS Clock app.
+app MobileTimer:'Clock' 'com.apple.mobiletimer' {
+    'GetCurrentTimerDetailsIntent',
+    'EditSleepAlarmIntent'
+}
+
+enum currentTimerDetail {
+    'duration',
+    'remainingTime',
+}
+
+enum sleepAlarmOperation {
+    'skip',
+    'unskip',
+    'toggle',
+}
+
+enum clockTab {
+    'clock',
+    'alarm',
+    'stopwatch',
+    'timer',
+}
+
+enum eventDetail {
+    'Start Date',
+    'End Date',
+    'Is All Day',
+    'Calendar',
+    'Location',
+    'Has Alarms',
+    'Duration',
+    'Is Canceled',
+    'My Status',
+    'Organizer',
+    'Organizer Is Me',
+    'Attendees',
+    'Number of Attendees',
+    'URL',
+    'Title',
+    'Notes',
+    'Attachments',
+    'File Size',
+    'File Extension',
+    'Creation Date',
+    'File Path',
+    'Last Modified Date',
+    'Name',
+}
+
+enum editEventDetail {
+    'Start Date',
+    'End Date',
+    'Is All Day',
+    'Location',
+    'Duration',
+    'My Status',
+    'Attendees',
+    'URL',
+    'Title',
+    'Notes',
+    'Attachments',
+}
+
+// [Doc]: [Calendars] Add Calendar: Create a calendar with `name`.
+action 'addnewcalendar' addCalendar(text name: 'CalendarName')
+
+// [Doc]: [Calendars] Open Event in Calendar: Show `event` in the calendar app.
+action showInCalendar(variable event: 'WFEvent')
+
+// [Doc]: [Calendars] Edit Event: Edit a detail of an event. Provide an event, a detail to modify, and a new value for that detail.
+action 'setters.calendarevents' editEvent(variable event: 'WFInput', editEventDetail detail: 'WFContentItemPropertyName', text newValue: 'WFCalendarEventContentItemStartDate')
+
+// [Doc]: [Calendars] Get Event Detail: Get a detail of an event.
+action 'properties.calendarevents' getEventDetail(variable event: 'WFInput', eventDetail detail: 'WFContentItemPropertyName')
+
+// [Doc]: [Calendars] Remove Events: Remove an event.
+action removeEvents(variable events: 'WFInputEvents', bool ?includeFutureEvents: 'WFCalendarIncludeFutureEvents' = false)
+
+// [Doc]: [Reminders] Open Reminders List
+action 'showlist' openRemindersList(variable list: 'WFList')
+
+// [Doc]: [Reminders] Add Quick Reminder
+action 'addquickreminder' addQuickReminder()
+
+// [Doc]: [Reminders] Remove Reminders
+action removeReminders(variable reminders: 'WFInputReminders')
+
+app Reminders 'com.apple.reminders' {
+    'CreateGroupAppIntent',
+    'CreateSectionAppIntent',
+    'DeleteRemindersListGroupsAppIntent',
+    'DeleteSectionsAppIntent'
+}
+
+// [Doc]: [Reminders] Make Reminders Group: Make a group of reminders lists named `name`, optionally containing `lists`.
+action v27 #Reminders.CreateGroupAppIntent makeRemindersGroup(text name, variable ?lists)
+
+// [Doc]: [Reminders] Make Reminders Section: Make a section named `name`, optionally in `list`.
+action v27 #Reminders.CreateSectionAppIntent makeRemindersSection(text name, variable ?list)
+
+// [Doc]: [Reminders] Delete Reminders Groups: Delete groups of reminders lists. Delete sublists also deletes the lists inside the groups.
+action v27 #Reminders.DeleteRemindersListGroupsAppIntent deleteRemindersGroups(variable groups: 'entities', bool ?deleteSublists)
+
+// [Doc]: [Reminders] Delete Reminders Sections: Delete sections of a reminders list. Delete reminders also deletes the reminders inside the sections.
+action v27 #Reminders.DeleteSectionsAppIntent deleteRemindersSections(variable sections: 'entities', bool ?deleteReminders)
+
+// [Doc]: [Clock] Create Alarm: Creates an alarm at a specific time with a name, snooze allowance, and applicable weekdays.
+action internal #Clock.CreateAlarmIntent 'com.apple.mobiletimer-framework.MobileTimerIntents.MTCreateAlarmIntent' createAlarm(text name: 'name', text time: 'dateComponents', bool ?allowsSnooze: 'allowsSnooze' = true, array ?repeatWeekdays, bool ?open: 'OpenWhenRun' = true)
+
+// [Doc]: [Clock] Get Alarms: Returns all of the alarms on the device.
+action #Clock.AlarmEntity 'com.apple.mobiletimer-framework.MobileTimerIntents.MTGetAlarmsIntent' getAlarms()
+
+// [Doc]: [Clock] Delete Alarm: Deletes an alarm.
+action #Clock.DeleteAlarmIntent deleteAlarm(variable alarm: 'entities')
+
+// [Doc]: [Clock] Turn On Alarm: Turn on an alarm.
+action default #Clock.ToggleAlarmIntent 'com.apple.mobiletimer-framework.MobileTimerIntents.MTToggleAlarmIntent' turnOnAlarm(variable alarm, bool ?showWhenRun: 'ShowWhenRun' = true) {
+    "state": 1
+}
+
+// [Doc]: [Clock] Turn Off Alarm: Turn off an alarm.
+action #Clock.ToggleAlarmIntent 'com.apple.mobiletimer-framework.MobileTimerIntents.MTToggleAlarmIntent' turnOffAlarm(variable alarm, bool ?showWhenRun: 'ShowWhenRun' = true) {
+    "state": 0
+}
+
+// [Doc]: [Clock] Toggle Alarm: Toggle an alarm.
+action #Clock.ToggleAlarmIntent 'com.apple.mobiletimer-framework.MobileTimerIntents.MTToggleAlarmIntent' toggleAlarm(variable alarm, bool ?showWhenRun: 'ShowWhenRun' = true) {
+    "operation": "toggle"
+}
+
+// [Doc]: [Clock] Open Alarm: Opens `alarm` in the Clock app.
+action #Clock.OpenAlarmIntent openAlarm(variable alarm: 'target')
+
+// [Doc]: [Clock] Start Timer: Creates a new timer.
+action 'timer.start' startTimer(#timeDuration duration: 'WFDuration' = qty(0, "min"))
+
+// [Doc]: [Clock] Pause Timer: Pauses the current timer.
+action !mac #Clock.PauseTimerIntent pauseTimer()
+
+// [Doc]: [Clock] Resume Timer: Resumes the current timer.
+action !mac #Clock.ResumeTimerIntent resumeTimer()
+
+// [Doc]: [Clock] Cancel Timer: Cancels the current timer.
+action !mac #Clock.CancelTimerIntent cancelTimer()
+
+// [Doc]: [Clock] Get Current Timer Detail: Returns the total duration or the remaining time of the current timer.
+action !mac #MobileTimer.GetCurrentTimerDetailsIntent getCurrentTimerDetail(currentTimerDetail detail: 'mode'): variable
+
+// [Doc]: [Clock] Toggle Sleep Alarm: Skips, unskips or toggles the next sleep alarm. Requires a Sleep schedule set up in the Health app.
+action !mac #MobileTimer.EditSleepAlarmIntent toggleSleepAlarm(sleepAlarmOperation operation: 'operation')
+
+// [Doc]: [Clock] Start Stopwatch: Starts the stopwatch.
+action !mac #Clock.StartStopwatchIntent startStopwatch()
+
+// [Doc]: [Clock] Stop Stopwatch: Stops the stopwatch.
+action !mac #Clock.StopStopwatchIntent stopStopwatch(bool ?showWhenRun: 'OpenWhenRun' = true)
+
+// [Doc]: [Clock] Lap Stopwatch: Laps the stopwatch.
+action !mac #Clock.LapStopwatchIntent lapStopwatch(bool ?showWhenRun: 'OpenWhenRun' = true)
+
+// [Doc]: [Clock] Reset Stopwatch: Resets the stopwatch.
+action !mac #Clock.ResetStopwatchIntent resetStopwatch(bool ?showWhenRun: 'OpenWhenRun' = true)
+
+// [Doc]: [Clock] Add City: Adds `city` to the world clock.
+action internal #Clock.AddWorldClockIntent addWorldClock(worldClockCity city, bool ?showWhenRun: 'OpenWhenRun' = true)
+
+// [Doc]: [Clock] Remove City: Removes `cities`, an array of city names, from the world clock.
+action internal #Clock.RemoveWorldClockIntent removeWorldClock(array cities, bool ?showWhenRun: 'OpenWhenRun' = true)
+
+// [Doc]: [Clock] Get City Time: Returns the current time in `city`.
+action internal #Clock.GetTimeForCityIntent getCityTime(worldClockCity city): text
+
+// [Doc]: [Clock] Open Clock Tab: Opens `tab` in the Clock app.
+action #Clock.OpenTab openClockTab(clockTab tab)
+
+// [Doc]: [Dates] Get Dates: Get dates from input.
+action 'detect.date' getDates(variable input: 'WFInput')
+
+// [Doc]: [Dates] Date: Create a date value from `date`. Example: October 5, 2022.
+action date(text date: 'WFDateActionDate'): date {
+	"WFDateActionMode": "Specified Date"
+}
+
+enum dateAdjustOperation {
+    'Add',
+    'Subtract',
+    'Get Start of Minute',
+    'Get Start of Hour',
+    'Get Start of Day',
+    'Get Start of Week',
+    'Get Start of Month',
+    'Get Start of Year',
+}
+
+enum dateUnit {
+    'sec',
+    'min',
+    'hr',
+    'days',
+    'weeks',
+    'months',
+    'yr'
+}
+
+// [Doc]: [Dates] Adjust Date: Adjust a date or get the start of a time period.
+action adjustDate(text date: 'WFDate', dateAdjustOperation operation: 'WFAdjustOperation', #dateUnit ?unit: 'WFDuration'): date
+
+enum holidayYear {
+    '2023',
+    '2024',
+    '2025',
+    '2026',
+    '2027',
+}
+
+enum eventOccurrenceMode {
+    'Next Occurrence',
+    'Specified Year',
+}
+
+enum holiday {
+    'April Fools\' Day',
+    'Ash Wednesday',
+    'Christmas Day',
+    'Christmas Eve',
+    'Cinco de Mayo',
+    'Columbus Day',
+    'Day of the Dead',
+    'Daylight Saving Time',
+    'Daylight Saving Time End',
+    'Diwali',
+    'Earth Day',
+    'Easter Sunday',
+    'Eid al-Adha',
+    'Eid al-Fitr',
+    'Election Day',
+    'Father\'s Day',
+    'First Night of Ramadan',
+    'Flag Day',
+    'Good Friday',
+    'Groundhog Day',
+    'Halloween',
+    'Holi',
+    'Inauguration Day',
+    'Independence Day',
+    'Indigenous Peoples\' Day',
+    'Juneteenth',
+    'Martin Luther King Jr. Day',
+    'Memorial Day',
+    'Mother\'s Day',
+    'New Year\'s Day',
+    'New Year\'s Eve',
+    'Palm Sunday',
+    'Presidents\' Day',
+    'St. Patrick\'s Day',
+    'Tax Day',
+    'Thanksgiving',
+    'Valentine\'s Day',
+    'Veterans Day',
+    'Workers\' Day',
+}
+
+// [Doc]: [Dates] Get Holiday Date: Get the date of a holiday, optionally specifically for a few past or future years.
+action 'date' getHolidayDate(holiday holiday: 'WFDateActionMode', eventOccurrenceMode ?occurrenceMode: 'WFEventOccurrenceMode' = "Next Occurrence", holidayYear ?forYear: 'WFEventOccurrenceSpecifiedYear'): date
+
+// [Doc]: [Dates] Current Date: Get the current date.
+action default 'date' currentDate(): date {
+    "WFDateActionMode": "Current Date"
+}
+
+enum dateFormats {
+	'None',
+	'Short',
+	'Medium',
+	'Long',
+	'Relative',
+	'RFC 2822',
+	'ISO 8601',
+	'Custom',
+}
+
+enum timeFormats {
+	'None',
+	'Short',
+	'Medium',
+	'Long',
+	'Relative',
+}
+
+// [Doc]: [Formatting] Format Date: Format a date using a standard or custom format.
+action default 'format.date' formatDate(text date: 'WFDate', dateFormats ?dateFormat: 'WFDateFormatStyle' = "Short", text ?customDateFormat: 'WFDateFormat'): text {
+	"WFTimeFormatStyle": "None"
+}
+
+// [Doc]: [Formatting] Format Time: Format a time using a standard or custom format.
+action 'format.date' formatTime(text time: 'WFDate', timeFormats ?timeFormat: 'WFTimeFormatStyle' = "Short"): text {
+	"WFDateFormatStyle": "None"
+}
+
+// [Doc]: [Formatting] Format Timestamp: Format a timestamp using standard formats and/or a custom date format.
+action 'format.date' formatTimestamp(
+    text date: 'WFDate',
+    dateFormats ?dateFormat: 'WFDateFormatStyle' = "Short",
+    timeFormats ?timeFormat: 'WFTimeFormatStyle' = "Short",
+    text ?customDateFormat: 'WFDateFormat'
+): text

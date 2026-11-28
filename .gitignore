@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Gizli ve üretilen dosyalar
+.env
+shortcuts/out/
+*.shortcut
