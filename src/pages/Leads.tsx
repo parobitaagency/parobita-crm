@@ -12,11 +12,11 @@ const VIEWS: { k: View; l: string }[] = [
   { k: 'tumu', l: 'Tümü' },
 ]
 const PAGE = 100
-const CHIPS: LeadStatus[] = ['yeni', 'acmadi', 'sonra_ara', 'red', 'toplanti', 'musteri']
+const CHIPS: LeadStatus[] = ['yeni', 'acmadi', 'sonra_ara', 'wp', 'uzun_vade', 'red', 'toplanti', 'musteri', 'gecersiz']
 type DateF = '' | 'bugun' | 'hafta' | 'ay'
 type Sort = 'varsayilan' | 'yakin' | 'konum' | 'guncel' | 'puan' | 'yorum' | 'isim'
 const store = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem('pb-lf-' + k); return v ? JSON.parse(v) as T : d } catch { return d } }
-const SELECTABLE: LeadStatus[] = ['yeni', 'toplanti', 'red', 'acmadi', 'sonra_ara']
+const SELECTABLE: LeadStatus[] = ['yeni', 'toplanti', 'red', 'acmadi', 'sonra_ara', 'wp', 'uzun_vade', 'gecersiz']
 
 const shortDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
@@ -59,7 +59,7 @@ export default function Leads() {
     const prefs: Record<string, unknown> = { sort: sort === 'konum' ? 'yakin' : sort === 'varsayilan' ? 'liste' : sort }
     if (niche) prefs.niche = niche
     if (district) prefs.district = district
-    const callable = statuses.filter((x) => ['yeni', 'acmadi', 'sonra_ara'].includes(x))
+    const callable = statuses.filter((x) => ['yeni', 'acmadi', 'sonra_ara', 'wp', 'uzun_vade'].includes(x))
     if (callable.length) prefs.statuses = callable
     if (sort === 'konum' && here) { prefs.olat = here.lat; prefs.olng = here.lng }
     supabase.from('profiles').update({ call_prefs: prefs }).eq('id', me.id).then(() => {})
@@ -100,7 +100,7 @@ export default function Leads() {
     if (who !== 'all') query = query.eq('assigned_to', who)
     if (statuses.length) query = query.in('status', statuses)
     else if (view === 'aranacak') query = query.in('status', ['yeni', 'acmadi'])
-    else if (view === 'tekrar') query = query.eq('status', 'sonra_ara')
+    else if (view === 'tekrar') query = query.in('status', ['sonra_ara', 'wp', 'uzun_vade'])
     else if (view === 'toplanti') query = query.in('status', ['toplanti', 'musteri'])
     if (niche) query = query.eq('niche', niche)
     if (district) query = query.ilike('district', `%${district}%`)
@@ -126,7 +126,7 @@ export default function Leads() {
     if (byDist && origin) {
       // Önce tekrar aranacaklar, sonra yakından uzağa
       list = [...list].sort((a, b) => {
-        const sa = a.status === 'sonra_ara' ? 0 : 1, sb = b.status === 'sonra_ara' ? 0 : 1
+        const cbk = (x: Lead) => (['sonra_ara', 'wp', 'uzun_vade'].includes(x.status) ? 0 : 1); const sa = cbk(a), sb = cbk(b)
         if (!statuses.length && view === 'aranacak' && sa !== sb) return sa - sb
         return (km(origin, a) ?? 1e9) - (km(origin, b) ?? 1e9)
       }).slice(0, limit)
@@ -143,7 +143,7 @@ export default function Leads() {
 
   const setStatus = async (l: Lead, s: LeadStatus) => {
     if (s === l.status) return
-    if (s === 'toplanti' || s === 'sonra_ara') { setOpen({ lead: l, outcome: s }); return }
+    if (s === 'toplanti' || s === 'sonra_ara' || s === 'wp' || s === 'uzun_vade') { setOpen({ lead: l, outcome: s }); return }
     if (s === 'yeni') {
       await supabase.from('leads').update({ status: 'yeni' }).eq('id', l.id)
     } else {

@@ -177,7 +177,7 @@ export default function Analytics() {
       const rev = won.reduce((s, d) => s + Number(d.amount ?? 0), 0)
       const paid = ds.flatMap((d) => d.payments).filter((p) => within(p.paid_at, R)).reduce((s, p) => s + Number(p.amount), 0)
       const c = cs.filter((x) => within(x.called_at, R))
-      const ans = c.filter((x) => x.outcome !== 'acmadi').length
+      const ans = c.filter((x) => x.outcome !== 'acmadi' && x.outcome !== 'gecersiz').length
       const meet = c.filter((x) => x.outcome === 'toplanti').length
       return { won, lost, rev, paid, calls: c, ans, meet, avg: won.length ? rev / won.length : 0 }
     }
@@ -238,7 +238,7 @@ export default function Analytics() {
     cur.calls.forEach((c) => {
       const d = new Date(c.called_at); const wd = (d.getDay() + 6) % 7; const h = d.getHours()
       if (wd > 5 || h < 9 || h > 20) return
-      const cell = g[wd][h - 9]; cell.calls++; if (c.outcome !== 'acmadi') cell.ans++; if (c.outcome === 'toplanti') cell.meet++
+      const cell = g[wd][h - 9]; cell.calls++; if (c.outcome !== 'acmadi' && c.outcome !== 'gecersiz') cell.ans++; if (c.outcome === 'toplanti') cell.meet++
     })
     return g
   }, [cur])

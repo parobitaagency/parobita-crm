@@ -9,7 +9,7 @@ export const supabase = createClient(
 )
 configureOffline(async () => (await supabase.auth.getSession()).data.session?.access_token ?? null)
 
-export type LeadStatus = 'yeni' | 'acmadi' | 'sonra_ara' | 'red' | 'toplanti' | 'musteri'
+export type LeadStatus = 'yeni' | 'acmadi' | 'sonra_ara' | 'red' | 'toplanti' | 'musteri' | 'wp' | 'uzun_vade' | 'gecersiz'
 
 export interface Profile { id: string; full_name: string; role: 'owner' | 'caller' }
 
@@ -33,6 +33,7 @@ export interface Lead {
   lat?: number | null
   lng?: number | null
   geo_level?: string | null
+  wa_sent_at?: string | null
 }
 
 export interface Meeting {
@@ -75,6 +76,9 @@ export const STATUS: Record<LeadStatus, { label: string; icon: string; tone: str
   red: { label: 'Red', icon: '❌', tone: 'red' },
   toplanti: { label: 'Toplantı', icon: '✅', tone: 'green' },
   musteri: { label: 'Müşteri', icon: '★', tone: 'blue' },
+  wp: { label: 'WhatsApp bilgi', icon: '📲', tone: 'blue' },
+  uzun_vade: { label: 'Uzun vade', icon: '⏳', tone: 'purple' },
+  gecersiz: { label: 'Geçersiz no', icon: '🚫', tone: 'gray' },
 }
 
 export const STAGES: { key: Stage; label: string; tone: string }[] = [
@@ -125,3 +129,16 @@ export interface CalEvent {
   notes: string | null
   location: string | null
 }
+
+// WhatsApp: 0532... → 90532...
+export const waNumber = (p: string | null | undefined) => {
+  let d = (p ?? '').replace(/\D/g, '')
+  if (d.startsWith('0')) d = '9' + d
+  else if (d.length === 10) d = '90' + d
+  return d
+}
+export const waText = (sender: string) =>
+  `Merhaba, ben Parobita'dan ${sender}. Az önce telefonda konuştuğumuz gibi kısaca bilgi bırakıyorum 🙂\n\n` +
+  `İşletmenize özel; telefonda ve Google'da şık görünen, sipariş/randevu/iletişimi kolaylaştıran web siteleri hazırlıyoruz. ` +
+  `Hakkımızda: parobita.agency\n\nUygun olduğunuz bir gün 10 dakikanızı alıp size özel hazırladığımız tasarımı göstermek isteriz. Hangi gün/saat size uyar?`
+export const waLink = (phone: string | null | undefined, sender: string) => `https://wa.me/${waNumber(phone)}?text=${encodeURIComponent(waText(sender))}`

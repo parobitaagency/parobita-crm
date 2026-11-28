@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase, type Lead, type Meeting } from '../lib/supabase'
+import { STATUS, supabase, waLink, type Lead, type Meeting } from '../lib/supabase'
 import { useSession } from '../lib/session'
 import { MeetingRow } from './Meetings'
 import MeetingPanel from '../components/MeetingPanel'
@@ -15,6 +15,7 @@ export default function Today() {
   const [stats, setStats] = useState({ calls: 0, meetingsBooked: 0, left: 0 })
   const [today, setToday] = useState<Meeting[]>([])
   const [callbacks, setCallbacks] = useState<Lead[]>([])
+  const [wa, setWa] = useState<Lead[]>([])
   const [openM, setOpenM] = useState<Meeting | null>(null)
   const [openL, setOpenL] = useState<Lead | null>(null)
 
@@ -22,16 +23,18 @@ export default function Today() {
     if (!me) return
     const start = new Date(); start.setHours(0, 0, 0, 0)
     const end = new Date(start.getTime() + 86400000)
-    const [c, mb, left, mt, cb] = await Promise.all([
+    const [c, mb, left, mt, cb, w] = await Promise.all([
       supabase.from('calls').select('id', { count: 'exact', head: true }).eq('user_id', me.id).gte('called_at', start.toISOString()),
       supabase.from('calls').select('id', { count: 'exact', head: true }).eq('user_id', me.id).eq('outcome', 'toplanti').gte('called_at', start.toISOString()),
       supabase.from('leads').select('id', { count: 'exact', head: true }).eq('assigned_to', me.id).in('status', ['yeni', 'acmadi']),
       supabase.from('meetings').select(SEL).eq('status', 'planli').gte('scheduled_at', start.toISOString()).lt('scheduled_at', end.toISOString()).order('scheduled_at'),
-      supabase.from('leads').select('*').eq('assigned_to', me.id).eq('status', 'sonra_ara').lte('call_back_at', end.toISOString()).order('call_back_at'),
+      supabase.from('leads').select('*').eq('assigned_to', me.id).in('status', ['sonra_ara', 'wp', 'uzun_vade']).lte('call_back_at', end.toISOString()).order('call_back_at'),
+      supabase.from('leads').select('*').eq('assigned_to', me.id).eq('status', 'wp').is('wa_sent_at', null).order('updated_at', { ascending: false }),
     ])
     setStats({ calls: c.count ?? 0, meetingsBooked: mb.count ?? 0, left: left.count ?? 0 })
     setToday((mt.data ?? []) as Meeting[])
     setCallbacks((cb.data ?? []) as Lead[])
+    setWa((w.data ?? []) as Lead[])
   }, [me])
   useEffect(() => { load() }, [load])
 
@@ -68,6 +71,19 @@ export default function Today() {
 
       <Rivalry />
 
+      {wa.length > 0 && (
+        <>
+          <h2 className="section">📲 WhatsApp’tan bilgi bekleyenler <span className="n">{wa.length}</span></h2>
+          <div className="list">{wa.map((l) => (
+            <div key={l.id} className="item">
+              <div className="grow" onClick={() => setOpenL(l)}><div className="t">{l.business_name}</div><div className="s">{[l.district, l.phone].filter(Boolean).join(' · ')}</div></div>
+              <a className="btn primary" href={waLink(l.phone, me?.full_name.split(' ')[0] ?? '')} target="_blank" rel="noreferrer"
+                onClick={() => { supabase.from('leads').update({ wa_sent_at: new Date().toISOString() }).eq('id', l.id).then(() => setWa((x) => x.filter((y) => y.id !== l.id))) }}>💬 Gönder</a>
+            </div>
+          ))}</div>
+        </>
+      )}
+
       <h2 className="section">Bugünkü toplantılar <span className="n">{today.length}</span></h2>
       {today.length ? <div className="list">{today.map((m) => <MeetingRow key={m.id} m={m} onClick={() => setOpenM(m)} />)}</div>
         : <div className="empty">Bugün toplantı yok.</div>}
@@ -77,7 +93,7 @@ export default function Today() {
         <div className="list">{callbacks.map((l) => (
           <div key={l.id} className="item" onClick={() => setOpenL(l)}>
             <span className="time">{l.call_back_at ? new Date(l.call_back_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
-            <div className="grow"><div className="t">{l.business_name}</div><div className="s">{l.notes?.split('\n')[0] ?? ''}</div></div>
+            <div className="grow"><div className="t">{l.business_name}</div><div className="s">{STATUS[l.status].icon} {STATUS[l.status].label}{l.notes ? ' · ' + l.notes.split('\n')[0] : ''}</div></div>
           </div>
         ))}</div>
       ) : <div className="empty">Bugün tekrar aranacak kimse yok.</div>}

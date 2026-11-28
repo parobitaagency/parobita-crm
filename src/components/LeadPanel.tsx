@@ -1,15 +1,25 @@
 import { useState } from 'react'
-import Panel, { Prop, fromLocalInput } from './Panel'
-import { STATUS, supabase, telHref, type Lead, type LeadStatus } from '../lib/supabase'
+import Panel, { Prop, fromLocalInput, toLocalInput } from './Panel'
+import { STATUS, supabase, telHref, waLink, type Lead, type LeadStatus } from '../lib/supabase'
 import { useSession } from '../lib/session'
 
-export type Outcome = 'acmadi' | 'sonra_ara' | 'red' | 'toplanti'
+export type Outcome = 'acmadi' | 'sonra_ara' | 'red' | 'toplanti' | 'wp' | 'uzun_vade' | 'gecersiz'
 const OUTCOMES: { k: Outcome; e: string; l: string }[] = [
   { k: 'toplanti', e: '✅', l: 'Toplantı' },
   { k: 'red', e: '❌', l: 'Red' },
   { k: 'acmadi', e: '⏸️', l: 'Açmadı' },
   { k: 'sonra_ara', e: '⚠️', l: 'Sonra ara' },
+  { k: 'wp', e: '📲', l: 'WhatsApp’tan bilgi' },
+  { k: 'uzun_vade', e: '⏳', l: 'Uzun vade' },
+  { k: 'gecersiz', e: '🚫', l: 'Yanlış no / kapalı' },
 ]
+const QUICK: Partial<Record<Outcome, [string, number][]>> = {
+  sonra_ara: [['1 saat', 1 / 24], ['Yarın', 1], ['3 gün', 3]],
+  wp: [['2 gün', 2], ['1 hafta', 7], ['2 hafta', 14]],
+  uzun_vade: [['1 ay', 30], ['3 ay', 91], ['6 ay', 182]],
+}
+const DEF_DAYS: Partial<Record<Outcome, number>> = { sonra_ara: 1, wp: 2, uzun_vade: 91 }
+const inDays = (d: number) => { const x = new Date(Date.now() + d * 86400000); if (d >= 1) x.setHours(10, 0, 0, 0); return x.toISOString() }
 
 export default function LeadPanel({ lead, onClose, onSaved, initialOutcome }: { lead: Lead; onClose: () => void; onSaved: (l: Lead) => void; initialOutcome?: Outcome }) {
   const { me, people, refreshBadges } = useSession()
@@ -40,8 +50,12 @@ export default function LeadPanel({ lead, onClose, onSaved, initialOutcome }: { 
       })
       if (e2) { setErr(e2.message); setBusy(false); return }
     }
-    if (outcome === 'sonra_ara') await supabase.from('leads').update({ call_back_at: fromLocalInput(when) }).eq('id', l.id)
-    const next: Lead = { ...l, status: outcome as LeadStatus, call_back_at: outcome === 'sonra_ara' ? fromLocalInput(when) : l.call_back_at }
+    let cb = l.call_back_at
+    if (outcome in DEF_DAYS) {
+      cb = fromLocalInput(when) ?? inDays(DEF_DAYS[outcome]!)
+      await supabase.from('leads').update({ call_back_at: cb }).eq('id', l.id)
+    }
+    const next: Lead = { ...l, status: outcome as LeadStatus, call_back_at: cb }
     onSaved(next)
     refreshBadges()
     setBusy(false)
@@ -88,12 +102,25 @@ export default function LeadPanel({ lead, onClose, onSaved, initialOutcome }: { 
         ))}
       </div>
 
-      {(outcome === 'toplanti' || outcome === 'sonra_ara') && (
+      {outcome && (outcome === 'toplanti' || outcome in DEF_DAYS) && (
         <div className="field">
-          <label>{outcome === 'toplanti' ? 'Toplantı günü ve saati' : 'Ne zaman tekrar aranacak?'}</label>
+          <label>{outcome === 'toplanti' ? 'Toplantı günü ve saati' : outcome === 'wp' ? 'Mesajdan sonra ne zaman tekrar arayalım?' : outcome === 'uzun_vade' ? 'Ne zaman tekrar deneyelim?' : 'Ne zaman tekrar aranacak?'}</label>
+          {QUICK[outcome] && (
+            <div className="chips" style={{ marginBottom: 6 }}>
+              {QUICK[outcome]!.map(([lbl, d]) => {
+                const v = toLocalInput(inDays(d))
+                return <button key={lbl} type="button" className={'chip' + (when === v ? ' on' : '')} onClick={() => setWhen(v)}>{lbl}</button>
+              })}
+            </div>
+          )}
           <input className="input" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
         </div>
       )}
+      {outcome === 'wp' && l.phone && me && (
+        <a className="btn big" style={{ width: '100%', marginBottom: 8 }} href={waLink(l.phone, me.full_name.split(' ')[0])} target="_blank" rel="noreferrer"
+          onClick={() => supabase.from('leads').update({ wa_sent_at: new Date().toISOString() }).eq('id', l.id).then(() => {})}>💬 Şimdi WhatsApp’tan gönder</a>
+      )}
+      {outcome === 'gecersiz' && <div className="callout neutral"><span className="ic">🚫</span>Bu numara arama listesinden çıkar.</div>}
       {outcome === 'toplanti' && (
         <div className="field">
           <label>Yetkilinin adı</label>
