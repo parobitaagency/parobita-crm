@@ -285,6 +285,10 @@ textarea.input { height: auto; min-height: 72px; padding: 8px 10px; resize: vert
 .rival-stats div { display: flex; flex-direction: column; }
 .rival-stats b { font-size: 20px; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .rival-stats span { font-size: 11px; color: var(--text-3); }
+.rival .streak { margin-left: auto; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.goal-num { margin-top: 6px; font-size: 13px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.goal-num b { font-size: 24px; color: var(--text); }
+.rival.hit .progress > div { background: #34c759; }
 
 .offline-bar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50; text-align: center;
