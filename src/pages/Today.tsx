@@ -8,7 +8,7 @@ import LeadPanel from '../components/LeadPanel'
 import Rivalry from '../components/Rivalry'
 import PushToggle from '../components/PushToggle'
 
-const SEL = '*, leads(business_name, phone, address, district, maps_url)'
+const SEL = '*, leads(business_name, phone, address, district, maps_url, lat, lng)'
 
 export default function Today() {
   const { me, badges } = useSession()

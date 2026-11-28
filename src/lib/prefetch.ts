@@ -2,7 +2,7 @@
 // Sorgular sayfalardakiyle birebir aynı olmalı (önbellek adrese göre tutuluyor).
 import { supabase } from './supabase'
 
-const MEET_SEL = '*, leads(business_name, phone, address, district, maps_url)'
+const MEET_SEL = '*, leads(business_name, phone, address, district, maps_url, lat, lng)'
 
 export async function prefetchAll(meId: string) {
   if (!navigator.onLine) return

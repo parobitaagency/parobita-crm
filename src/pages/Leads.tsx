@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { STATUS, supabase, telHref, type Lead, type LeadStatus } from '../lib/supabase'
 import { useSession } from '../lib/session'
 import LeadPanel, { type Outcome } from '../components/LeadPanel'
+import { dirUrl, fmtKm, geocodeMissing, km, useBase, type Pt } from '../lib/geo'
 
 type View = 'aranacak' | 'tekrar' | 'toplanti' | 'tumu'
 const VIEWS: { k: View; l: string }[] = [
@@ -13,7 +14,7 @@ const VIEWS: { k: View; l: string }[] = [
 const PAGE = 100
 const CHIPS: LeadStatus[] = ['yeni', 'acmadi', 'sonra_ara', 'red', 'toplanti', 'musteri']
 type DateF = '' | 'bugun' | 'hafta' | 'ay'
-type Sort = 'varsayilan' | 'guncel' | 'puan' | 'yorum' | 'isim'
+type Sort = 'varsayilan' | 'yakin' | 'konum' | 'guncel' | 'puan' | 'yorum' | 'isim'
 const store = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem('pb-lf-' + k); return v ? JSON.parse(v) as T : d } catch { return d } }
 const SELECTABLE: LeadStatus[] = ['yeni', 'toplanti', 'red', 'acmadi', 'sonra_ara']
 
@@ -38,6 +39,31 @@ export default function Leads() {
   const [counts, setCounts] = useState<Partial<Record<LeadStatus, number>>>({})
   const [districts, setDistricts] = useState<string[]>([])
   const [showF, setShowF] = useState(false)
+  const base = useBase()
+  const [here, setHere] = useState<Pt | null>(() => store('here', null))
+  const [locErr, setLocErr] = useState('')
+  const origin: Pt | null = sort === 'konum' ? here : base
+  const askLocation = () => {
+    setLocErr('')
+    navigator.geolocation?.getCurrentPosition(
+      (p) => { const h = { lat: p.coords.latitude, lng: p.coords.longitude }; setHere(h); localStorage.setItem('pb-lf-here', JSON.stringify(h)) },
+      () => { setLocErr('Konum alınamadı — ofise göre sıralandı'); setSort('yakin') },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 },
+    )
+  }
+  useEffect(() => { if (sort === 'konum') askLocation() }, [sort]) // eslint-disable-line react-hooks/exhaustive-deps
+  const mineView = who === me?.id
+  // Arama seansı (kısayol) bu sıralama ve filtrelerle arasın
+  useEffect(() => {
+    if (!mineView || !me) return
+    const prefs: Record<string, unknown> = { sort: sort === 'konum' ? 'yakin' : sort === 'varsayilan' ? 'liste' : sort }
+    if (niche) prefs.niche = niche
+    if (district) prefs.district = district
+    const callable = statuses.filter((x) => ['yeni', 'acmadi', 'sonra_ara'].includes(x))
+    if (callable.length) prefs.statuses = callable
+    if (sort === 'konum' && here) { prefs.olat = here.lat; prefs.olng = here.lng }
+    supabase.from('profiles').update({ call_prefs: prefs }).eq('id', me.id).then(() => {})
+  }, [mineView, me, sort, niche, district, statuses, here])
   useEffect(() => {
     localStorage.setItem('pb-lf-st', JSON.stringify(statuses)); localStorage.setItem('pb-lf-dist', JSON.stringify(district))
     localStorage.setItem('pb-lf-date', JSON.stringify(dateF)); localStorage.setItem('pb-lf-sort', JSON.stringify(sort))
@@ -84,7 +110,9 @@ export default function Leads() {
       if (dateF === 'ay') d.setDate(1)
       query = query.gte('list_date', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
     }
-    if (sort === 'guncel') query = query.order('updated_at', { ascending: false })
+    const byDist = sort === 'yakin' || sort === 'konum'
+    if (byDist) query = query.order('updated_at', { ascending: false })
+    else if (sort === 'guncel') query = query.order('updated_at', { ascending: false })
     else if (sort === 'puan') query = query.order('rating', { ascending: false, nullsFirst: false })
     else if (sort === 'yorum') query = query.order('review_count', { ascending: false, nullsFirst: false })
     else if (sort === 'isim') query = query.order('business_name')
@@ -93,10 +121,20 @@ export default function Leads() {
     else query = query.order('updated_at', { ascending: false })
     const s = q.trim().replace(/[%,()]/g, '')
     if (s) query = query.or(`business_name.ilike.%${s}%,phone.ilike.%${s}%,district.ilike.%${s}%,address.ilike.%${s}%`)
-    const { data, count } = await query.range(0, limit - 1)
-    setRows((data ?? []) as Lead[])
+    const { data, count } = await query.range(0, byDist ? 1999 : limit - 1)
+    let list = (data ?? []) as Lead[]
+    if (byDist && origin) {
+      // Önce tekrar aranacaklar, sonra yakından uzağa
+      list = [...list].sort((a, b) => {
+        const sa = a.status === 'sonra_ara' ? 0 : 1, sb = b.status === 'sonra_ara' ? 0 : 1
+        if (!statuses.length && view === 'aranacak' && sa !== sb) return sa - sb
+        return (km(origin, a) ?? 1e9) - (km(origin, b) ?? 1e9)
+      }).slice(0, limit)
+    }
+    setRows(list)
+    geocodeMissing(list as never, (id, p) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...p } : r))))
     setTotal(count ?? 0)
-  }, [who, view, niche, q, limit, statuses, district, dateF, sort])
+  }, [who, view, niche, q, limit, statuses, district, dateF, sort, origin?.lat, origin?.lng])
 
   useEffect(() => { const t = setTimeout(load, q ? 250 : 0); return () => clearTimeout(t) }, [load, q])
   useEffect(() => setLimit(PAGE), [who, view, niche, q, statuses, district, dateF, sort])
@@ -169,6 +207,8 @@ export default function Leads() {
               </select>
               <select className="filter" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
                 <option value="varsayilan">Sıralama: arama sırası</option>
+                <option value="yakin">📍 Yakından uzağa (ofis)</option>
+                <option value="konum">📍 Yakından uzağa (konumum)</option>
                 <option value="guncel">Son güncellenen</option>
                 <option value="puan">En yüksek puan</option>
                 <option value="yorum">En çok yorum</option>
@@ -177,6 +217,7 @@ export default function Leads() {
               {activeF > 0 && <button className="btn ghost" onClick={clearF}>Temizle</button>}
             </div>
           )}
+          {mineView && <div className="faint" style={{ fontSize: 12 }}>▶ Arama seansı bu sıralama ve filtrelerle arar{locErr ? ` · ${locErr}` : ''}</div>}
         </div>
       )}
 
@@ -190,6 +231,7 @@ export default function Leads() {
               {view === 'tekrar' && <th>Tekrar ara</th>}
               <th>Niş</th>
               <th>Semt</th>
+              <th>Mesafe</th>
               <th>Puan</th>
               <th>Yorum</th>
               <th>Adres</th>
@@ -218,11 +260,12 @@ export default function Leads() {
                 {view === 'tekrar' && <td className={'nowrap ' + (due(l) ? 'warn-dot' : 'muted')}>{l.call_back_at ? shortDate(l.call_back_at) : 'Tarih yok'}</td>}
                 <td className="muted nowrap">{l.niche}</td>
                 <td className="muted nowrap">{l.district}</td>
+                <td className="muted nowrap">{fmtKm(km(origin ?? base, l))}</td>
                 <td className="muted nowrap">{l.rating ? `★ ${l.rating}` : ''}</td>
                 <td className="muted nowrap">{l.review_count ?? ''}</td>
                 <td className="muted clip" title={l.address ?? ''}>{l.address}</td>
                 <td className="muted clip" title={l.notes ?? ''}>{l.notes?.replace(/\n/g, ' · ')}</td>
-                <td className="nowrap">{l.maps_url ? <a href={l.maps_url} target="_blank" rel="noreferrer" className="muted">Aç ↗</a> : ''}</td>
+                <td className="nowrap">{l.maps_url ? <a href={l.maps_url} target="_blank" rel="noreferrer" className="muted">Aç ↗</a> : ''}{dirUrl(l) && <> · <a href={dirUrl(l)!} target="_blank" rel="noreferrer" className="muted">Yol ↗</a></>}</td>
                 <td><button className="icon-btn" title="Detay" onClick={() => setOpen({ lead: l })}>⋯</button></td>
               </tr>
             ))}

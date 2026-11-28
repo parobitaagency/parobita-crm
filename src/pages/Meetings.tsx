@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { fmtTime, supabase, type Meeting } from '../lib/supabase'
 import MeetingPanel from '../components/MeetingPanel'
 import CalendarView from '../components/CalendarView'
+import { fmtKm, fmtMin, km, shortDistrict, useBase } from '../lib/geo'
 
-const SEL = '*, leads(business_name, phone, address, district, maps_url)'
+const SEL = '*, leads(business_name, phone, address, district, maps_url, lat, lng)'
 
 const dayLabel = (d: Date) => {
   const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -16,13 +17,16 @@ const dayLabel = (d: Date) => {
 
 export function MeetingRow({ m, onClick, showDay }: { m: Meeting; onClick: () => void; showDay?: boolean }) {
   const missing = !m.scheduled_at || !(m.contact_name ?? '').trim()
+  const base = useBase()
+  const d = km(base, m.leads)
   return (
     <div className="item" onClick={onClick}>
       <span className="time">{m.scheduled_at ? (showDay ? new Date(m.scheduled_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : fmtTime(m.scheduled_at)) : '—'}</span>
       <div className="grow">
         <div className="t">{m.leads?.business_name}</div>
-        <div className="s">{[m.contact_name, m.leads?.district].filter(Boolean).join(' · ') || ' '}</div>
+        <div className="s">{[m.contact_name, shortDistrict(m.leads?.district) && '📍 ' + shortDistrict(m.leads?.district)].filter(Boolean).join(' · ') || ' '}</div>
       </div>
+      {d != null && <span className="dist"><b>{fmtKm(d)}</b><span>{fmtMin(d)}</span></span>}
       {missing && m.status === 'planli' && <span className="tag red">⚠️ Eksik</span>}
     </div>
   )

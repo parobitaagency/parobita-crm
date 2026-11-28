@@ -1,3 +1,4 @@
+import { dirUrl, fmtKm, fmtMin, km, useBase } from '../lib/geo'
 import { useEffect, useState } from 'react'
 import Panel, { Prop, fromLocalInput, toLocalInput } from './Panel'
 import { LOST_REASONS, PACKAGES, STAGES, supabase, telHref, type Deal, type Meeting, type Stage } from '../lib/supabase'
@@ -7,6 +8,7 @@ type Result = 'satis' | 'dusunuyor' | 'kayip' | 'gelmedi'
 
 export default function MeetingPanel({ meeting, onClose, onSaved }: { meeting: Meeting; onClose: () => void; onSaved: () => void }) {
   const { people, refreshBadges } = useSession()
+  const base = useBase()
   const [m, setM] = useState<Meeting>(meeting)
   const [deal, setDeal] = useState<Deal | null>(null)
   const [result, setResult] = useState<Result | null>(null)
@@ -81,11 +83,17 @@ export default function MeetingPanel({ meeting, onClose, onSaved }: { meeting: M
         <Prop k="Katılan">{people.filter((p) => m.attendees?.includes(p.id)).map((p) => p.full_name).join(', ') || '—'}</Prop>
         <Prop k="Telefon">{biz?.phone ? <a href={telHref(biz.phone)}>{biz.phone}</a> : '—'}</Prop>
         <Prop k="Adres"><span className="muted">{[biz?.district, biz?.address].filter(Boolean).join(' · ') || '—'}</span></Prop>
-        <Prop k="Harita">{biz?.maps_url ? <a href={biz.maps_url} target="_blank" rel="noreferrer">Yol tarifi ↗</a> : '—'}</Prop>
+        <Prop k="Mesafe">{(() => { const d = km(base, biz); return d == null ? <span className="muted">—</span> : <span>{fmtKm(d)} <span className="muted">· arabayla {fmtMin(d)} (ofisten)</span></span> })()}</Prop>
         {deal && <Prop k="Satış aşaması"><span className={'tag ' + STAGES.find((s) => s.key === deal.stage)!.tone}>{STAGES.find((s) => s.key === deal.stage)!.label}</span></Prop>}
         <Prop k="Not"><textarea rows={2} defaultValue={m.notes ?? ''} onBlur={(e) => patch({ notes: e.target.value || null })} /></Prop>
       </div>
 
+      {dirUrl(biz) && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <a className="btn primary" href={dirUrl(biz)!} target="_blank" rel="noreferrer" style={{ flex: 1, justifyContent: 'center' }}>🧭 Yol tarifi</a>
+          {biz?.maps_url && <a className="btn" href={biz.maps_url} target="_blank" rel="noreferrer">📍 Haritada gör</a>}
+        </div>
+      )}
       {m.status === 'planli' && (
         <>
           <div className="divider" />

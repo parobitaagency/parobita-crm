@@ -9,11 +9,9 @@ begin
     'now', to_char(loc, 'HH24:MI'),
     'me', (select full_name from profiles where id = uid),
     'rivals', (select json_agg(json_build_object('name', split_part(full_name,' ',1), 'me', id = uid, 'today', today_calls, 'week', week_calls, 'meet', week_meetings, 'ezik', ezik) order by id <> uid) from rivalry),
-    'queue', (select count(*) from leads where assigned_to = uid and phone is not null and (status in ('yeni','acmadi') or (status='sonra_ara' and call_back_at <= now()))),
+    'queue', (select count(*) from call_queue(uid, 5000)),
     'next_leads', (select coalesce(json_agg(x), '[]') from (
-        select business_name name, coalesce(niche,'') niche, coalesce(district,'') district, status from leads
-        where assigned_to = uid and phone is not null and (status in ('yeni','acmadi') or (status='sonra_ara' and call_back_at <= now()))
-        order by case when status='sonra_ara' then 0 when status='yeni' then 1 else 2 end, list_date nulls last, sort_order nulls last limit 8) x),
+        select business_name name, coalesce(niche,'') niche, coalesce(district,'') district, status from call_queue(uid, 8)) x),
     'meetings', (select coalesce(json_agg(x), '[]') from (
         select l.business_name name, m.scheduled_at at, coalesce(m.contact_name,'') contact, coalesce(l.district,'') district from meetings m join leads l on l.id=m.lead_id
         where m.status='planli' and m.scheduled_at >= now() - interval '1 hour' and (m.created_by = uid or uid = any(m.attendees))

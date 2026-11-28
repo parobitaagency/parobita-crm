@@ -30,6 +30,9 @@ export interface Lead {
   sort_order: number | null
   notes: string | null
   updated_at: string
+  lat?: number | null
+  lng?: number | null
+  geo_level?: string | null
 }
 
 export interface Meeting {
@@ -43,7 +46,7 @@ export interface Meeting {
   status: 'planli' | 'yapildi' | 'iptal' | 'gelmedi'
   result_entered: boolean
   notes: string | null
-  leads?: Pick<Lead, 'business_name' | 'phone' | 'address' | 'district' | 'maps_url'>
+  leads?: Pick<Lead, 'business_name' | 'phone' | 'address' | 'district' | 'maps_url' | 'lat' | 'lng'>
 }
 
 export type Stage = 'toplanti' | 'demo' | 'teklif' | 'dusunuyor' | 'satis' | 'kayip'

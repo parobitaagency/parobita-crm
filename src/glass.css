@@ -460,3 +460,6 @@ body::after {
 .status-chip.on.gray { background: #6e6e73; border-color: #6e6e73; }
 .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
 @media (max-width: 760px) { .filter-row select.filter { flex: 1 1 45%; min-width: 0; } }
+.item .dist { display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; line-height: 1.25; white-space: nowrap; }
+.item .dist b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.item .dist span { color: var(--text-3); font-size: 11px; }

@@ -3,7 +3,7 @@ import { fmtTime, supabase, type CalEvent, type Meeting } from '../lib/supabase'
 import { useSession } from '../lib/session'
 import EventPanel from './EventPanel'
 
-const SEL = '*, leads(business_name, phone, address, district, maps_url)'
+const SEL = '*, leads(business_name, phone, address, district, maps_url, lat, lng)'
 const DAY = 86400000
 const HOUR_PX = 52
 const startOfWeek = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); const wd = (x.getDay() + 6) % 7; return new Date(x.getTime() - wd * DAY) }
@@ -60,7 +60,7 @@ export default function CalendarView({ onOpen }: { onOpen: (m: Meeting) => void 
     ...meetings.filter((m) => m.scheduled_at).map((m) => {
       const s = new Date(m.scheduled_at!)
       return { key: 'm' + m.id, start: s, end: new Date(s.getTime() + m.duration_min * 60000), title: m.leads?.business_name ?? 'Toplantı',
-        sub: m.contact_name ?? undefined, tone: toneOf(m.created_by), faded: m.status !== 'planli', warn: m.status === 'planli' && !(m.contact_name ?? '').trim(), kind: 'meeting' as const, ref: m }
+        sub: [m.leads?.district?.split(/[(/]/)[0].trim(), m.contact_name].filter(Boolean).join(' · ') || undefined, tone: toneOf(m.created_by), faded: m.status !== 'planli', warn: m.status === 'planli' && !(m.contact_name ?? '').trim(), kind: 'meeting' as const, ref: m }
     }),
     ...events.map((e) => ({ key: 'e' + e.id, start: new Date(e.starts_at), end: new Date(e.ends_at), title: e.title, sub: e.location ?? undefined,
       tone: toneOf(e.owner_id) + ' soft', kind: 'event' as const, ref: e })),
