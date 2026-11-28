@@ -101,7 +101,9 @@ export const LOST_REASONS: Record<string, string> = {
   fiyat: 'Fiyat',
   gerek_yok: 'Gerek görmedi',
   sahibi_yok: 'Sahibi yoktu',
-  baska_firma: 'Başka firma',
+  baska_firma: 'Başka firma / ajansı var',
+  sosyal_medya: 'Instagram yetiyor dedi',
+  zaman: 'Şu an zamanı yok',
   ulasilamadi: 'Ulaşılamadı',
   diger: 'Diğer',
 }

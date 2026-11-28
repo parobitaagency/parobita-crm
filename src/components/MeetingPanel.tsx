@@ -4,7 +4,28 @@ import Panel, { Prop, fromLocalInput, toLocalInput } from './Panel'
 import { LOST_REASONS, PACKAGES, STAGES, supabase, telHref, type Deal, type Meeting, type Stage } from '../lib/supabase'
 import { useSession } from '../lib/session'
 
-type Result = 'satis' | 'dusunuyor' | 'kayip' | 'gelmedi'
+type Result = 'satis' | 'teklif' | 'dusunuyor' | 'danisacak' | 'wp' | 'tekrar' | 'uzun_vade' | 'gelmedi' | 'kayip'
+const RESULTS: [Result, string, string][] = [
+  ['satis', '✅', 'Satış'],
+  ['teklif', '💰', 'Teklif verdik'],
+  ['dusunuyor', '🤔', 'Düşünecek'],
+  ['danisacak', '👥', 'Ortağına/eşine danışacak'],
+  ['wp', '📲', 'WhatsApp’tan bilgi/fiyat istedi'],
+  ['tekrar', '🔁', 'Tekrar görüşelim dedi'],
+  ['uzun_vade', '⏳', 'İleride (uzun vade)'],
+  ['gelmedi', '🚫', 'Olmadı / yetkili yoktu'],
+  ['kayip', '❌', 'Almayacak'],
+]
+const FOLLOW_QUICK: Partial<Record<Result, [string, number][]>> = {
+  teklif: [['Yarın', 1], ['3 gün', 3], ['1 hafta', 7]],
+  dusunuyor: [['2 gün', 2], ['3 gün', 3], ['1 hafta', 7]],
+  danisacak: [['Yarın', 1], ['2 gün', 2], ['1 hafta', 7]],
+  wp: [['2 gün', 2], ['1 hafta', 7], ['2 hafta', 14]],
+  uzun_vade: [['1 ay', 30], ['3 ay', 91], ['6 ay', 182]],
+  gelmedi: [['Yarın', 1], ['2 gün', 2], ['1 hafta', 7]],
+}
+const FOLLOW_DEF: Partial<Record<Result, number>> = { teklif: 3, dusunuyor: 3, danisacak: 2, wp: 2, uzun_vade: 91, gelmedi: 1 }
+const inDays = (d: number) => { const x = new Date(Date.now() + d * 86400000); x.setHours(10, 0, 0, 0); return x.toISOString() }
 
 export default function MeetingPanel({ meeting, onClose, onSaved }: { meeting: Meeting; onClose: () => void; onSaved: () => void }) {
   const { people, refreshBadges } = useSession()
@@ -17,6 +38,8 @@ export default function MeetingPanel({ meeting, onClose, onSaved }: { meeting: M
   const [lost, setLost] = useState('')
   const [follow, setFollow] = useState('')
   const [note, setNote] = useState('')
+  const [paid, setPaid] = useState('')
+  const [next, setNext] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -35,24 +58,31 @@ export default function MeetingPanel({ meeting, onClose, onSaved }: { meeting: M
 
   const saveResult = async () => {
     if (!result) return
+    if (result === 'tekrar' && !next) { setErr('Yeni görüşmenin gününü ve saatini gir.'); return }
     setBusy(true); setErr('')
-    const meetingStatus = result === 'gelmedi' ? 'gelmedi' : 'yapildi'
-    await supabase.from('meetings').update({ status: meetingStatus, result_entered: true, notes: note ? [m.notes, note].filter(Boolean).join('\n') : m.notes }).eq('id', m.id)
+    const label = RESULTS.find((r) => r[0] === result)![2]
+    const fullNote = [m.notes, `Sonuç: ${label}${note ? ' — ' + note : ''}`].filter(Boolean).join('\n')
+    await supabase.from('meetings').update({ status: result === 'gelmedi' ? 'gelmedi' : 'yapildi', result_entered: true, notes: fullNote }).eq('id', m.id)
+    const followAt = fromLocalInput(follow) ?? (FOLLOW_DEF[result] ? inDays(FOLLOW_DEF[result]!) : null)
     if (deal) {
-      const stage: Stage = result === 'gelmedi' ? 'dusunuyor' : result
-      const p: Partial<Deal> = { stage }
-      if (result === 'satis') {
-        p.package = pkg || null
-        p.amount = amount ? Number(amount) : pkg ? PACKAGES[pkg].price : null
-        p.closed_at = new Date().toISOString()
+      const stageOf: Record<Result, Stage> = { satis: 'satis', teklif: 'teklif', dusunuyor: 'dusunuyor', danisacak: 'dusunuyor', wp: 'dusunuyor', tekrar: 'demo', uzun_vade: 'dusunuyor', gelmedi: 'toplanti', kayip: 'kayip' }
+      const p: Partial<Deal> = { stage: stageOf[result], notes: [deal.notes, `${new Date().toLocaleDateString('tr-TR')}: ${label}${note ? ' — ' + note : ''}`].filter(Boolean).join('\n') }
+      if (result === 'satis' || result === 'teklif') {
+        p.package = pkg || deal.package || null
+        p.amount = amount ? Number(amount) : pkg && PACKAGES[pkg].price ? PACKAGES[pkg].price : deal.amount
       }
-      if (result === 'kayip') p.lost_reason = lost || null
-      if (result === 'dusunuyor' || result === 'gelmedi') {
-        p.next_followup_at = fromLocalInput(follow) ?? new Date(Date.now() + 3 * 86400000).toISOString()
-        p.followup_step = 'ara'
-      }
+      if (result === 'satis') { p.closed_at = new Date().toISOString(); p.next_followup_at = null }
+      if (result === 'kayip') { p.lost_reason = lost || null; p.closed_at = new Date().toISOString(); p.next_followup_at = null }
+      if (followAt && result !== 'satis' && result !== 'kayip') { p.next_followup_at = followAt; p.followup_step = 'ara' }
+      if (result === 'tekrar') p.next_followup_at = fromLocalInput(next)
       await supabase.from('deals').update(p).eq('id', deal.id)
-      if (result === 'satis') await supabase.from('leads').update({ status: 'musteri' }).eq('id', m.lead_id)
+      if (result === 'satis' && paid && Number(paid) > 0) await supabase.from('payments').insert({ deal_id: deal.id, amount: Number(paid), paid_at: new Date().toISOString().slice(0, 10), note: 'Toplantıda alındı' })
+    }
+    if (result === 'satis') await supabase.from('leads').update({ status: 'musteri' }).eq('id', m.lead_id)
+    if (result === 'wp') await supabase.from('leads').update({ status: 'wp', wa_sent_at: null, call_back_at: followAt }).eq('id', m.lead_id)
+    if (result === 'uzun_vade') await supabase.from('leads').update({ status: 'uzun_vade', call_back_at: followAt }).eq('id', m.lead_id)
+    if (result === 'tekrar') {
+      await supabase.from('meetings').insert({ lead_id: m.lead_id, created_by: m.created_by, attendees: m.attendees, scheduled_at: fromLocalInput(next), contact_name: m.contact_name, notes: 'İkinci görüşme' })
     }
     setBusy(false); onSaved(); refreshBadges(); onClose()
   }
@@ -98,14 +128,14 @@ export default function MeetingPanel({ meeting, onClose, onSaved }: { meeting: M
         <>
           <div className="divider" />
           <div className="muted" style={{ fontSize: 13 }}>{ended ? 'Toplantı nasıl geçti?' : 'Toplantı sonucu (toplantıdan sonra)'}</div>
-          <div className="outcomes">
-            {([['satis', '✅', 'Satış'], ['dusunuyor', '🤔', 'Düşünüyor'], ['kayip', '❌', 'Kayıp'], ['gelmedi', '🚫', 'Olmadı']] as const).map(([k, e, l]) => (
-              <button key={k} className={'outcome' + (result === k ? ' on' : '')} onClick={() => setResult(k)}><span className="e">{e}</span>{l}</button>
+          <div className="outcomes outcomes-3">
+            {RESULTS.map(([k, e, l]) => (
+              <button key={k} className={'outcome' + (result === k ? ' on' : '')} onClick={() => { setResult(k); setFollow(''); setErr('') }}><span className="e">{e}</span>{l}</button>
             ))}
           </div>
-          {result === 'satis' && (
+          {(result === 'satis' || result === 'teklif') && (
             <>
-              <div className="field"><label>Paket</label>
+              <div className="field"><label>{result === 'satis' ? 'Hangi paketi aldı?' : 'Hangi paketi teklif ettik?'}</label>
                 <div className="chips">
                   {Object.entries(PACKAGES).map(([k, p]) => (
                     <button key={k} className={'chip' + (pkg === k ? ' on' : '')} onClick={() => { setPkg(k); if (p.price) setAmount(String(p.price)) }}>
@@ -115,24 +145,45 @@ export default function MeetingPanel({ meeting, onClose, onSaved }: { meeting: M
                 </div>
               </div>
               <div className="field"><label>Tutar (TL)</label><input className="input" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))} /></div>
+              {result === 'satis' && (
+                <div className="field"><label>Şimdi alınan ödeme / kapora (TL, yoksa boş)</label>
+                  <div className="chips" style={{ marginBottom: 6 }}>
+                    {amount && <button className={'chip' + (paid === amount ? ' on' : '')} onClick={() => setPaid(amount)}>Tamamı</button>}
+                    {amount && <button className={'chip' + (paid === String(Math.round(Number(amount) / 2)) ? ' on' : '')} onClick={() => setPaid(String(Math.round(Number(amount) / 2)))}>Yarısı</button>}
+                  </div>
+                  <input className="input" inputMode="numeric" value={paid} onChange={(e) => setPaid(e.target.value.replace(/\D/g, ''))} />
+                </div>
+              )}
             </>
           )}
           {result === 'kayip' && (
-            <div className="field"><label>Neden?</label>
+            <div className="field"><label>Neden almadı?</label>
               <div className="chips">
                 {Object.entries(LOST_REASONS).map(([k, v]) => <button key={k} className={'chip' + (lost === k ? ' on' : '')} onClick={() => setLost(k)}>{v}</button>)}
               </div>
             </div>
           )}
-          {(result === 'dusunuyor' || result === 'gelmedi') && (
-            <div className="field"><label>Ne zaman tekrar aranacak? (boş bırakırsan 3 gün sonra)</label>
+          {result === 'tekrar' && (
+            <div className="field"><label>Yeni görüşme günü ve saati</label>
+              <input className="input" type="datetime-local" value={next} onChange={(e) => setNext(e.target.value)} />
+            </div>
+          )}
+          {result && FOLLOW_QUICK[result] && (
+            <div className="field"><label>{result === 'wp' ? 'Mesajdan sonra ne zaman arayalım?' : result === 'gelmedi' ? 'Ne zaman tekrar arayıp yeni gün alalım?' : 'Ne zaman takip edelim?'}</label>
+              <div className="chips" style={{ marginBottom: 6 }}>
+                {FOLLOW_QUICK[result]!.map(([lbl, d]) => { const v = toLocalInput(inDays(d)); return <button key={lbl} className={'chip' + (follow === v ? ' on' : '')} onClick={() => setFollow(v)}>{lbl}</button> })}
+              </div>
               <input className="input" type="datetime-local" value={follow} onChange={(e) => setFollow(e.target.value)} />
             </div>
+          )}
+          {result === 'wp' && biz?.phone && (
+            <div className="callout neutral"><span className="ic">📲</span>Kaydedince Bugün sayfasındaki “WhatsApp bekleyenler” listesine düşer, mesaj hazır gelir.</div>
           )}
           {result && (
             <>
               <div className="field"><label>Not (isteğe bağlı)</label><input className="input" value={note} onChange={(e) => setNote(e.target.value)} /></div>
               <button className="btn primary big" style={{ width: '100%' }} disabled={busy || (result === 'satis' && !pkg)} onClick={saveResult}>Sonucu kaydet</button>
+              {err && <div className="err">{err}</div>}
             </>
           )}
           <div style={{ marginTop: 16 }}>
